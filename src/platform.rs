@@ -2,11 +2,13 @@ mod mac;
 mod win;
 
 use std::format;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 
+pub use mac::MacConfig;
 pub use win::WinConfig;
+
+pub trait Platform {
+    fn setup(&self);
+}
 
 pub struct ToolSetConfig<'a> {
     target: &'a str,
@@ -51,10 +53,23 @@ impl<'a> CargoConfig<'a> {
     }
 
     pub fn write(self) {
-        let content = self.content();
+        use std::fs;
+        use std::io::Write;
+        use std::path::PathBuf;
 
-        let dest_path = Path::new(".cargo").join("config");
-        let mut file = File::create(&dest_path).unwrap();
+        let file_name = ".cargo/config";
+        let path = PathBuf::from(file_name);
+        path.parent().and_then(|parent_path| {
+            if !parent_path.exists() {
+                fs::create_dir_all(parent_path).ok()
+            } else {
+                Some(())
+            }
+        });
+
+        let mut file = fs::File::create(file_name).expect("file error");
+
+        let content = self.content();
         file.write_all(content.as_bytes()).unwrap();
     }
 }

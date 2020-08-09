@@ -1,6 +1,18 @@
 mod platform;
 
+use platform::Platform;
+
 fn main() {
-    let win = platform::WinConfig;
-    win.setup();
+    let platform = platform();
+    platform.setup();
+}
+
+#[cfg(target_os = "windows")]
+fn platform() -> impl Platform {
+    platform::WinConfig
+}
+
+#[cfg(target_os = "macos")]
+fn platform() -> impl Platform {
+    platform::MacConfig
 }

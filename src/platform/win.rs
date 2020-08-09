@@ -1,12 +1,12 @@
 use std::env;
 use std::format;
 
-use super::{CargoConfig, ToolSetConfig};
+use super::{CargoConfig, Platform, ToolSetConfig};
 
 pub struct WinConfig;
 
-impl WinConfig {
-    pub fn setup(&self) {
+impl Platform for WinConfig {
+    fn setup(&self) {
         let root_path = env::var("NDK_TOOL_ROOT").unwrap();
 
         let aarch64_ar = format!(
