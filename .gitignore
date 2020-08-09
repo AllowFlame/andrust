@@ -1,1 +1,5 @@
 /target
+/out
+/.vscode
+/.ide
+*.lock
