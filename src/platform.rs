@@ -7,6 +7,7 @@ pub use mac::MacConfig;
 pub use win::WinConfig;
 
 pub trait Platform {
+    fn search_rpath() -> Option<String>;
     fn setup(&self);
 }
 

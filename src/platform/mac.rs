@@ -6,8 +6,12 @@ use super::{CargoConfig, Platform, ToolSetConfig};
 pub struct MacConfig;
 
 impl Platform for MacConfig {
+    fn search_rpath() -> Option<String> {
+        env::var("NDK_TOOL_ROOT").ok()
+    }
+
     fn setup(&self) {
-        let root_path = env::var("NDK_TOOL_ROOT").unwrap();
+        let root_path = MacConfig::search_rpath().unwrap();
 
         let aarch64_ar = format!(
             "{}/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar",
