@@ -7,7 +7,11 @@ pub struct MacConfig;
 
 impl Platform for MacConfig {
     fn search_rpath() -> Option<String> {
-        env::var("NDK_TOOL_ROOT").ok()
+        env::var("NDK_TOOL_ROOT").or(
+            env::var("HOME").map(|home_path| {
+                format!("{}/Library/Android/sdk/ndk-bundle", home_path.as_str())
+            })
+        ).ok()
     }
 
     fn setup(&self) {
