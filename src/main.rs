@@ -1,10 +1,12 @@
+mod downloader;
 mod platform;
 
+use downloader::Downloader;
 use platform::Platform;
 
 fn main() {
-    let platform = platform();
-    platform.setup();
+    // let platform = platform();
+    // platform.setup();
 }
 
 #[cfg(target_os = "windows")]
