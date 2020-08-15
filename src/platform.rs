@@ -8,7 +8,29 @@ pub use win::WinConfig;
 
 pub trait Platform {
     fn search_rpath() -> Option<String>;
-    fn setup(&self);
+    fn determine_ndk_path(&self) -> String;
+    fn setup_config(&self, ndk_path: &str);
+
+    fn ask_rpath() -> String {
+        use std::io::{stdin, stdout, Write};
+
+        let mut user_input = String::new();
+        println!("Can't find NDK root path.");
+        print!("Please enter NDK root path: ");
+        let _ = stdout().flush();
+        stdin()
+            .read_line(&mut user_input)
+            .expect("Did not enter a correct string");
+        if let Some('\n') = user_input.chars().next_back() {
+            user_input.pop();
+        }
+        if let Some('\r') = user_input.chars().next_back() {
+            user_input.pop();
+        }
+        println!("You typed: {}", user_input);
+
+        user_input
+    }
 }
 
 pub struct ToolSetConfig<'a> {

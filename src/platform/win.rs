@@ -7,19 +7,44 @@ pub struct WinConfig;
 
 impl Platform for WinConfig {
     fn search_rpath() -> Option<String> {
-        env::var("NDK_TOOL_ROOT").ok()
+        use std::path::Path;
+
+        env::var("NDK_TOOL_ROOT").ok().and_then(|path| {
+            if Path::new(path.as_str()).exists() {
+                Some(path)
+            } else {
+                None
+            }
+        })
     }
 
-    fn setup(&self) {
-        let root_path = WinConfig::search_rpath().unwrap();
+    fn determine_ndk_path(&self) -> String {
+        let root_path = WinConfig::search_rpath().or_else(|| {
+            use std::path::Path;
 
+            let path = WinConfig::ask_rpath();
+            if Path::new(path.as_str()).exists() {
+                Some(path)
+            } else {
+                None
+            }
+        });
+
+        //TODO: ask downloading
+        match root_path {
+            Some(path) => path,
+            None => "".to_owned(),
+        }
+    }
+
+    fn setup_config(&self, root_path: &str) {
         let aarch64_ar = format!(
             "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar",
-            root_path.as_str()
+            root_path
         );
         let aarch64_linker = format!(
             "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang.cmd",
-            root_path.as_str()
+            root_path
         );
         let aarch64 = ToolSetConfig::new(
             "aarch64-linux-android",
@@ -29,11 +54,11 @@ impl Platform for WinConfig {
 
         let armv7_ar = format!(
             "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ar",
-            root_path.as_str()
+            root_path
         );
         let armv7_linker = format!(
             "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/armv7a-linux-androideabi16-clang.cmd",
-            root_path.as_str()
+            root_path
         );
         let armv7 = ToolSetConfig::new(
             "armv7-linux-androideabi",
@@ -43,11 +68,11 @@ impl Platform for WinConfig {
 
         let i686_ar = format!(
             "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ar",
-            root_path.as_str()
+            root_path
         );
         let i686_linker = format!(
             "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android16-clang.cmd",
-            root_path.as_str()
+            root_path
         );
         let i686 = ToolSetConfig::new("i686-linux-android", i686_ar.as_str(), i686_linker.as_str());
 

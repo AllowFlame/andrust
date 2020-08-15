@@ -11,3 +11,4 @@ hyper = "0.13"
 hyper-tls = "0.4.3"
 futures = "0.3"
 tokio = { version = "0.2", features = ["full"] }
+crossterm = "0.17.7"

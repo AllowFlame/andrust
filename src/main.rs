@@ -1,12 +1,12 @@
 mod downloader;
 mod platform;
 
-use downloader::Downloader;
 use platform::Platform;
 
 fn main() {
-    // let platform = platform();
-    // platform.setup();
+    let platform = platform();
+    let ndk_path = platform.determine_ndk_path();
+    platform.setup_config(ndk_path.as_str());
 }
 
 #[cfg(target_os = "windows")]

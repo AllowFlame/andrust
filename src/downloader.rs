@@ -24,12 +24,24 @@ impl Downloader {
         hyper::Result::Ok(())
     }
 
+    /*
+    use downloader::Downloader;
+
+    let downloader = Downloader::default();
+    let _ = downloader.download(
+        "https://dl.google.com/android/repository/android-ndk-r21b-windows-x86_64.zip"
+            .parse()
+            .unwrap(),
+        "ndk.zip",
+    );
+    */
     pub async fn save_body(mut body: Body, file_name: &str) {
         use hyper::body::HttpBody;
         use std::fs;
-        use std::io::Write;
-        use std::io::{Error, ErrorKind};
+        use std::io::{stdout, Error, ErrorKind, Write};
         use std::path::PathBuf;
+
+        use crossterm::{cursor, QueueableCommand};
 
         let path = PathBuf::from(file_name);
         path.parent().and_then(|parent_path| {
@@ -40,11 +52,20 @@ impl Downloader {
             }
         });
 
+        let mut stdout = stdout();
+        let _ = stdout.queue(cursor::SavePosition);
+
         let mut file = fs::File::create(file_name).expect("file error");
         'stream: while let Some(piece) = body.data().await {
             let save_result = piece
                 .map_err(|_err| Error::new(ErrorKind::Other, "response body chunk error"))
                 .and_then(|chunk| file.write_all(&chunk));
+
+            let _ = file.metadata().map(|meta| {
+                let _ = stdout.write(format!("size : {}", meta.len()).as_bytes());
+                let _ = stdout.queue(cursor::RestorePosition);
+                let _ = stdout.flush();
+            });
 
             match save_result {
                 Ok(_) => continue,
