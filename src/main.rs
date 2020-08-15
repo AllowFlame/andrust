@@ -18,3 +18,8 @@ fn platform() -> impl Platform {
 fn platform() -> impl Platform {
     platform::MacConfig
 }
+
+#[cfg(target_os = "linux")]
+fn platform() -> impl Platform {
+    platform::LinuxConfig
+}

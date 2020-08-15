@@ -1,10 +1,12 @@
 mod mac;
 mod win;
+mod linux;
 
 use std::format;
 
 pub use mac::MacConfig;
 pub use win::WinConfig;
+pub use linux::LinuxConfig;
 
 pub trait Platform {
     fn search_rpath() -> Option<String>;
