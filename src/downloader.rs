@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use hyper::client::HttpConnector;
 use hyper::Uri;
 use hyper::{Body, Client};
@@ -72,5 +74,48 @@ impl Downloader {
                 Err(_err) => break 'stream,
             }
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DownloadConfig {
+    windows: Option<Vec<String>>,
+    macos: Option<Vec<String>>,
+    linux: Option<Vec<String>>,
+}
+
+impl Default for DownloadConfig {
+    fn default() -> Self {
+        let windows = vec![
+            "https://dl.google.com/android/repository/android-ndk-r21b-windows-x86_64.zip"
+                .to_owned(),
+        ];
+        let macos = vec![
+            "https://dl.google.com/android/repository/android-ndk-r21b-darwin-x86_64.zip"
+                .to_owned(),
+        ];
+        let linux = vec![
+            "https://dl.google.com/android/repository/android-ndk-r21b-linux-x86_64.zip".to_owned(),
+        ];
+
+        DownloadConfig {
+            windows: Some(windows),
+            macos: Some(macos),
+            linux: Some(linux),
+        }
+    }
+}
+
+impl DownloadConfig {
+    pub fn windows(&self) -> Option<&str> {
+        self.windows.as_ref().and_then(|vec| Some(vec[0].as_str()))
+    }
+
+    pub fn macos(&self) -> Option<&str> {
+        self.macos.as_ref().and_then(|vec| Some(vec[0].as_str()))
+    }
+
+    pub fn linux(&self) -> Option<&str> {
+        self.linux.as_ref().and_then(|vec| Some(vec[0].as_str()))
     }
 }

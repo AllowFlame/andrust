@@ -7,7 +7,19 @@ pub struct LinuxConfig;
 
 impl Platform for LinuxConfig {
     fn search_rpath() -> Option<String> {
-        None
+        use std::path::Path;
+
+        env::var("NDK_TOOL_ROOT")
+            .or(env::var("HOME")
+                .map(|home_path| format!("{}/tools/Android/sdk/ndk-bundle", home_path.as_str())))
+            .ok()
+            .and_then(|path| {
+                if Path::new(path.as_str()).exists() {
+                    Some(path)
+                } else {
+                    None
+                }
+            })
     }
 
     fn determine_ndk_path(&self) -> String {
@@ -22,10 +34,21 @@ impl Platform for LinuxConfig {
             }
         });
 
-        //TODO: ask downloading
+        let download = || {
+            use crate::downloader::{DownloadConfig, Downloader};
+
+            let config = DownloadConfig::default();
+            let downloader = Downloader::default();
+            let _ = downloader.download(config.linux().unwrap().parse().unwrap(), "ndk.zip");
+
+            env::var("HOME")
+                .map(|home_path| format!("{}/tools", home_path.as_str()))
+                .ok()
+        };
+
         match root_path {
             Some(path) => path,
-            None => "".to_owned(),
+            None => download().unwrap_or("default".to_owned()),
         }
     }
 
