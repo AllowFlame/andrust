@@ -4,10 +4,10 @@ mod platform;
 use platform::Platform;
 
 fn main() {
-    // let platform = platform();
-    // let ndk_path = platform.determine_ndk_path();
-    // platform.setup_config(ndk_path.as_str());
-    unzip();
+    let platform = platform();
+    let ndk_path = platform.determine_ndk_path();
+    platform.setup_config(ndk_path.as_str());
+    // unzip();
 }
 
 #[cfg(target_os = "windows")]

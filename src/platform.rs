@@ -1,12 +1,12 @@
+mod linux;
 mod mac;
 mod win;
-mod linux;
 
 use std::format;
 
+pub use linux::LinuxConfig;
 pub use mac::MacConfig;
 pub use win::WinConfig;
-pub use linux::LinuxConfig;
 
 pub trait Platform {
     fn search_rpath() -> Option<String>;
@@ -48,10 +48,10 @@ impl<'a> ToolSetConfig<'a> {
 
     pub fn toolset_format(&self) -> String {
         format!(
-            r#"[target.{}]
+            r#"
+[target.{}]
 ar = "{}"
 linker = "{}"
-
 "#,
             self.target, self.ar, self.linker
         )
