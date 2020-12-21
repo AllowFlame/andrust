@@ -1,0 +1,3 @@
+[submodule "submodule/webcraft"]
+	path = submodule/webcraft
+	url = git@github.com:AllowFlame/webcraft.git

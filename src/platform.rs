@@ -33,6 +33,8 @@ pub trait Platform {
 
         user_input
     }
+
+    fn download_ndk() {}
 }
 
 pub struct ToolSetConfig<'a> {
