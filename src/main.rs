@@ -4,10 +4,22 @@ mod platform;
 use platform::Platform;
 
 fn main() {
-    let platform = platform();
+    // let platform = platform();
+    /*
     let ndk_path = platform.determine_ndk_path();
     platform.setup_config(ndk_path.as_str());
-    // unzip();
+    // */
+    unzip();
+
+    /* download sample
+    let downloader = downloader::Downloader::default();
+    let _ = downloader.download(
+        "https://dl.google.com/android/repository/android-ndk-r21b-windows-x86_64.zip"
+            .parse()
+            .unwrap(),
+        "ndk.zip",
+    );
+    */
 }
 
 #[cfg(target_os = "windows")]
