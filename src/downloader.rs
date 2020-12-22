@@ -1,11 +1,13 @@
 use std::cell::{RefCell, RefMut};
 use std::fs;
-use std::io::{stdout, Error, ErrorKind, Stdout, Write};
+use std::io::{stdout, Stdout, Write};
 
 use serde::{Deserialize, Serialize};
 
 use crossterm::{cursor, QueueableCommand};
-use webcraft::{hyper::Body, hyper::Request, hyper::Uri, Craft, CraftError, SaveFileObserver};
+use webcraft::{
+    hyper::Body, hyper::Request, hyper::Uri, Craft, CraftError, CraftResult, SaveFileObserver,
+};
 
 struct DownloadIndicator {
     stdout: RefCell<Stdout>,
@@ -47,26 +49,21 @@ impl Default for Downloader {
 
 impl Downloader {
     #[tokio::main]
-    pub async fn download(
-        &self,
-        uri: Uri,
-        file_name: &str,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn download(&self, uri: Uri, file_name: &str) -> CraftResult<()> {
         let req = Request::builder()
             .method("GET")
             .uri(uri)
             .body(Body::empty())
-            .unwrap();
+            .map_err(|_err| CraftError::HyperConnector)?;
 
         let body = self
             .craft
             .visit(req, &|response| Result::Ok(response))
-            .await
-            .unwrap()
+            .await?
             .into_body();
 
         let indicator = DownloadIndicator::default();
-        Craft::save_body(body, file_name, Some(Box::new(indicator))).await;
+        Craft::save_body(body, file_name, Some(Box::new(indicator))).await?;
 
         Result::Ok(())
     }
