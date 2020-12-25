@@ -1,5 +1,6 @@
 mod downloader;
 mod platform;
+mod unarchiver;
 
 use platform::Platform;
 
@@ -38,7 +39,12 @@ fn platform() -> impl Platform {
 }
 
 fn unzip() {
-    real_main();
+    use std::fs;
+
+    // real_main();
+    let fname = std::path::Path::new("target/ndk.zip");
+    let file = fs::File::open(&fname).unwrap();
+    unarchiver::unzip(&file);
 }
 
 fn real_main() -> i32 {
@@ -87,7 +93,7 @@ fn real_main() -> i32 {
                 }
             }
             let mut outfile = fs::File::create(&outpath).unwrap();
-            io::copy(&mut file, &mut outfile).unwrap();
+            io::copy(&mut file, &mut outfile).unwrap(); // <- optimizing point
         }
 
         // Get and Set permissions
