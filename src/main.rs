@@ -4,6 +4,10 @@ mod unarchiver;
 
 use platform::Platform;
 
+#[cfg(test)]
+mod downloader_test;
+mod unarchiver_test;
+
 fn main() {
     // let platform = platform();
     /*
