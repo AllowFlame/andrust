@@ -31,7 +31,6 @@ async fn extract_zip_file(archive: Arc<ZipArchive<&fs::File>>, index: usize) -> 
         "extract_zip_file - outpath : {}",
         &outpath.as_path().display()
     );
-    let mut outfile = tokio::fs::File::create(&outpath).await.unwrap();
 
     if zip_file.is_dir() || zip_file.name().ends_with('/') {
         println!("File extracted to \"{}\"", outpath.as_path().display());
@@ -48,6 +47,9 @@ async fn extract_zip_file(archive: Arc<ZipArchive<&fs::File>>, index: usize) -> 
                 tokio::fs::create_dir_all(&path).await.unwrap();
             }
         }
+        // let mut outfile = tokio::fs::File::create(&outpath).await.map_err(|e| {
+        //     println!("error - path: {}, e: {}", &outpath.as_path().display(), e);
+        // });
         // tokio::io::copy(&mut zip_file, &mut outfile).await
         Ok(0)
     }
