@@ -42,7 +42,7 @@ fn unzip() {
     use std::fs;
 
     // real_main();
-    let fname = std::path::Path::new("target/ndk.zip");
+    let fname = std::path::Path::new("zip_test/ndk.zip");
     let file = fs::File::open(&fname).unwrap();
     unarchiver::unzip(&file);
 }

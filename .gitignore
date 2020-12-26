@@ -2,4 +2,6 @@
 /out
 /.vscode
 /.ide
+/.idea
+/zip*
 *.lock
