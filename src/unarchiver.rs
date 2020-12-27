@@ -23,7 +23,7 @@ pub async fn unzip(zip_file: &fs::File) -> io::Result<()> {
 async fn extract_zip_file(archive: Arc<ZipArchive<&fs::File>>, index: usize) -> io::Result<u64> {
     println!("extract_zip_file - i : {}", index);
     let mut archive = Arc::clone(&archive);
-    let mut archive = Arc::make_mut(&mut archive);
+    let archive = Arc::make_mut(&mut archive);
     let mut zip_file = archive.by_index(index).unwrap();
 
     let outpath = zip_file.sanitized_name();
