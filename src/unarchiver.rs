@@ -2,7 +2,7 @@ use std::fs;
 use std::io;
 use std::sync::Arc;
 
-use zip::{read::ZipFile, ZipArchive};
+use zip::ZipArchive;
 
 #[tokio::main]
 pub async fn unzip(zip_file: &fs::File) -> io::Result<()> {
