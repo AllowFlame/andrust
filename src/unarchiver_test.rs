@@ -6,5 +6,5 @@ fn unzip_test() {
 
     let file_name = std::path::Path::new("zip_test/test.zip");
     let file = fs::File::open(&file_name).unwrap();
-    unarchiver::unzip(&file);
+    let _ = unarchiver::unzip(&file);
 }
