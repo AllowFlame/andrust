@@ -6,6 +6,7 @@ use platform::Platform;
 
 #[cfg(test)]
 mod downloader_test;
+#[cfg(test)]
 mod unarchiver_test;
 
 fn main() {
