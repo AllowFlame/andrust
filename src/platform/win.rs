@@ -22,7 +22,7 @@ impl Platform for WinConfig {
         let root_path = WinConfig::search_ndk_root_path().or_else(|| {
             use std::path::Path;
 
-            let path = WinConfig::ask_rpath();
+            let path = WinConfig::ask_root_path();
             if Path::new(path.as_str()).exists() {
                 Some(path)
             } else {
