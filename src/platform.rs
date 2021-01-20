@@ -9,7 +9,7 @@ pub use mac::MacConfig;
 pub use win::WinConfig;
 
 pub trait Platform {
-    fn search_rpath() -> Option<String>;
+    fn search_ndk_root_path() -> Option<String>;
     fn determine_ndk_path(&self) -> String;
     fn setup_config(&self, ndk_path: &str);
 

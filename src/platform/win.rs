@@ -6,7 +6,7 @@ use super::{CargoConfig, Platform, ToolSetConfig};
 pub struct WinConfig;
 
 impl Platform for WinConfig {
-    fn search_rpath() -> Option<String> {
+    fn search_ndk_root_path() -> Option<String> {
         use std::path::Path;
 
         env::var("NDK_TOOL_ROOT").ok().and_then(|path| {
@@ -19,7 +19,7 @@ impl Platform for WinConfig {
     }
 
     fn determine_ndk_path(&self) -> String {
-        let root_path = WinConfig::search_rpath().or_else(|| {
+        let root_path = WinConfig::search_ndk_root_path().or_else(|| {
             use std::path::Path;
 
             let path = WinConfig::ask_rpath();
