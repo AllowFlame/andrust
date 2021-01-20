@@ -6,7 +6,7 @@ use super::{CargoConfig, Platform, ToolSetConfig};
 pub struct MacConfig;
 
 impl Platform for MacConfig {
-    fn search_rpath() -> Option<String> {
+    fn search_ndk_root_path() -> Option<String> {
         use std::path::Path;
 
         env::var("NDK_TOOL_ROOT")
@@ -23,7 +23,7 @@ impl Platform for MacConfig {
     }
 
     fn determine_ndk_path(&self) -> String {
-        let root_path = MacConfig::search_rpath().or_else(|| {
+        let root_path = MacConfig::search_ndk_root_path().or_else(|| {
             use std::path::Path;
 
             let path = MacConfig::ask_rpath();
