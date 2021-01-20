@@ -26,7 +26,7 @@ impl Platform for MacConfig {
         let root_path = MacConfig::search_ndk_root_path().or_else(|| {
             use std::path::Path;
 
-            let path = MacConfig::ask_rpath();
+            let path = MacConfig::ask_root_path();
             if Path::new(path.as_str()).exists() {
                 Some(path)
             } else {

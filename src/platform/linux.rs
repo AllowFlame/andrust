@@ -26,7 +26,7 @@ impl Platform for LinuxConfig {
         let root_path = LinuxConfig::search_ndk_root_path().or_else(|| {
             use std::path::Path;
 
-            let path = LinuxConfig::ask_rpath();
+            let path = LinuxConfig::ask_root_path();
             if Path::new(path.as_str()).exists() {
                 Some(path)
             } else {

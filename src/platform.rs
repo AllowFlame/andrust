@@ -13,7 +13,7 @@ pub trait Platform {
     fn determine_ndk_path(&self) -> String;
     fn setup_config(&self, ndk_path: &str);
 
-    fn ask_rpath() -> String {
+    fn ask_root_path() -> String {
         use std::io::{stdin, stdout, Write};
 
         let mut user_input = String::new();
