@@ -68,6 +68,8 @@ impl Platform for WinConfig {
 
         let mut toolsets = HashSet::new();
         toolsets.insert(aarch64);
+        toolsets.insert(armv7);
+        toolsets.insert(i686);
         toolsets
     }
 

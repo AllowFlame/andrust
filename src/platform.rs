@@ -40,7 +40,7 @@ pub trait Platform {
     fn download_ndk() {}
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq, Hash)]
 pub enum TargetPlatformToolset {
     Aarch64(&'static str, String, String),
     Armv7(&'static str, String, String),
