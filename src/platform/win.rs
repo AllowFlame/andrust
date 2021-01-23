@@ -1,7 +1,8 @@
+use std::collections::HashSet;
 use std::env;
 use std::format;
 
-use super::{CargoConfig, Platform, ToolSetConfig};
+use super::{CargoConfig, Platform, TargetPlatformToolset, ToolSetConfig};
 
 pub struct WinConfig;
 
@@ -35,6 +36,39 @@ impl Platform for WinConfig {
             Some(path) => path,
             None => "".to_owned(),
         }
+    }
+
+    fn setup_toolsets() -> HashSet<TargetPlatformToolset> {
+        let aarch64_ar = "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar";
+        let aarch64_linker =
+            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang.cmd";
+        let aarch64 = TargetPlatformToolset::Aarch64(
+            "aarch64-linux-android",
+            aarch64_ar.to_owned(),
+            aarch64_linker.to_owned(),
+        );
+
+        let armv7_ar = "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ar";
+        let armv7_linker =
+            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/armv7a-linux-androideabi16-clang.cmd";
+        let armv7 = TargetPlatformToolset::Armv7(
+            "armv7-linux-androideabi",
+            armv7_ar.to_owned(),
+            armv7_linker.to_owned(),
+        );
+
+        let i686_ar = "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ar";
+        let i686_linker =
+            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android16-clang.cmd";
+        let i686 = TargetPlatformToolset::I686(
+            "i686-linux-android",
+            i686_ar.to_owned(),
+            i686_linker.to_owned(),
+        );
+
+        let mut toolsets = HashSet::new();
+        toolsets.insert(aarch64);
+        toolsets
     }
 
     fn setup_config(&self, root_path: &str) {

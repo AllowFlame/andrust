@@ -2,6 +2,7 @@ mod linux;
 mod mac;
 mod win;
 
+use std::collections::HashSet;
 use std::format;
 
 pub use linux::LinuxConfig;
@@ -13,11 +14,13 @@ pub trait Platform {
     fn determine_ndk_path(&self) -> String;
     fn setup_config(&self, ndk_path: &str);
 
+    fn setup_toolsets() -> HashSet<TargetPlatformToolset>;
+
     fn ask_root_path() -> String {
         use std::io::{stdin, stdout, Write};
 
         let mut user_input = String::new();
-        println!("Can't find NDK root path.");
+        println!(r#"Can't find NDK root path. System variable "NDK_TOOL_ROOT" is not set."#);
         print!("Please enter NDK root path: ");
         let _ = stdout().flush();
         stdin()
@@ -35,6 +38,13 @@ pub trait Platform {
     }
 
     fn download_ndk() {}
+}
+
+#[derive(PartialEq)]
+pub enum TargetPlatformToolset {
+    Aarch64(&'static str, String, String),
+    Armv7(&'static str, String, String),
+    I686(&'static str, String, String),
 }
 
 pub struct ToolSetConfig<'a> {
@@ -57,6 +67,18 @@ linker = "{}"
 "#,
             self.target, self.ar, self.linker
         )
+    }
+
+    pub fn target(&self) -> &str {
+        self.target
+    }
+
+    pub fn ar(&self) -> &str {
+        self.ar
+    }
+
+    pub fn linker(&self) -> &str {
+        self.linker
     }
 }
 
