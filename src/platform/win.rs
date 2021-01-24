@@ -1,15 +1,16 @@
-use std::collections::HashSet;
-use std::env;
-use std::format;
+use std::{collections::HashSet, env, format, path::Path};
 
-use super::{CargoConfig, Platform, TargetPlatformToolset, ToolSetConfig};
+use super::{
+    CargoConfig, ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset,
+    TargetPlatform, ToolSetConfig,
+};
 
-pub struct WinConfig;
+pub struct WinConfig {
+    targets: HashSet<TargetPlatform>,
+}
 
 impl Platform for WinConfig {
     fn search_ndk_root_path() -> Option<String> {
-        use std::path::Path;
-
         env::var("NDK_TOOL_ROOT").ok().and_then(|path| {
             if Path::new(path.as_str()).exists() {
                 Some(path)
@@ -19,105 +20,84 @@ impl Platform for WinConfig {
         })
     }
 
-    fn determine_ndk_path(&self) -> String {
-        let root_path = WinConfig::search_ndk_root_path().or_else(|| {
-            use std::path::Path;
+    fn determine_ndk_path(&self) -> PlatformResult<String> {
+        let root_path = WinConfig::search_ndk_root_path()
+            .or_else(|| {
+                let path = WinConfig::ask_root_path();
+                if Path::new(path.as_str()).exists() {
+                    Some(path)
+                } else {
+                    None
+                }
+            })
+            .and_then(|path| {
+                let toolsets = self.targets();
+                let does_exist = WinConfig::does_toolsets_exist(path.as_str(), toolsets);
+                if does_exist {
+                    Some(path)
+                } else {
+                    None
+                }
+            });
 
-            let path = WinConfig::ask_root_path();
-            if Path::new(path.as_str()).exists() {
-                Some(path)
-            } else {
-                None
-            }
-        });
-
-        //TODO: ask downloading
         match root_path {
-            Some(path) => path,
-            None => "".to_owned(),
+            Some(path) => Result::Ok(path),
+            None => Result::Err(PlatformError::ToolsetDoesNotExist),
         }
     }
 
-    fn setup_toolsets() -> HashSet<TargetPlatformToolset> {
-        let aarch64_ar = "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar";
+    fn targets(&self) -> &HashSet<TargetPlatform> {
+        &self.targets
+    }
+
+    fn setup_config(self, root_path: &str) {
+        use std::iter::FromIterator;
+
+        let toolsets = self
+            .targets
+            .into_iter()
+            .map(|target| target.add_root_path(root_path));
+        let toolsets = HashSet::from_iter(toolsets);
+
+        let writer = ConfigWriter::new(&toolsets);
+        writer.write();
+    }
+}
+
+impl WinConfig {
+    pub fn new() -> Self {
+        let aarch64_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar";
         let aarch64_linker =
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang.cmd";
-        let aarch64 = TargetPlatformToolset::Aarch64(
+            "toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang.cmd";
+        let aarch64 = PlatformToolset::new(
             "aarch64-linux-android",
             aarch64_ar.to_owned(),
             aarch64_linker.to_owned(),
         );
 
-        let armv7_ar = "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ar";
+        let armv7_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ar";
         let armv7_linker =
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/armv7a-linux-androideabi16-clang.cmd";
-        let armv7 = TargetPlatformToolset::Armv7(
+            "toolchains/llvm/prebuilt/windows-x86_64/bin/armv7a-linux-androideabi16-clang.cmd";
+        let armv7 = PlatformToolset::new(
             "armv7-linux-androideabi",
             armv7_ar.to_owned(),
             armv7_linker.to_owned(),
         );
 
-        let i686_ar = "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ar";
+        let i686_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ar";
         let i686_linker =
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android16-clang.cmd";
-        let i686 = TargetPlatformToolset::I686(
+            "toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android16-clang.cmd";
+        let i686 = PlatformToolset::new(
             "i686-linux-android",
             i686_ar.to_owned(),
             i686_linker.to_owned(),
         );
 
         let mut toolsets = HashSet::new();
-        toolsets.insert(aarch64);
-        toolsets.insert(armv7);
-        toolsets.insert(i686);
-        toolsets
-    }
+        toolsets.insert(TargetPlatform::Aarch64(aarch64));
+        toolsets.insert(TargetPlatform::Armv7(armv7));
+        toolsets.insert(TargetPlatform::I686(i686));
 
-    fn setup_config(&self, root_path: &str) {
-        let aarch64_ar = format!(
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar",
-            root_path
-        );
-        let aarch64_linker = format!(
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang.cmd",
-            root_path
-        );
-        let aarch64 = ToolSetConfig::new(
-            "aarch64-linux-android",
-            aarch64_ar.as_str(),
-            aarch64_linker.as_str(),
-        );
-
-        let armv7_ar = format!(
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ar",
-            root_path
-        );
-        let armv7_linker = format!(
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/armv7a-linux-androideabi16-clang.cmd",
-            root_path
-        );
-        let armv7 = ToolSetConfig::new(
-            "armv7-linux-androideabi",
-            armv7_ar.as_str(),
-            armv7_linker.as_str(),
-        );
-
-        let i686_ar = format!(
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ar",
-            root_path
-        );
-        let i686_linker = format!(
-            "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android16-clang.cmd",
-            root_path
-        );
-        let i686 = ToolSetConfig::new("i686-linux-android", i686_ar.as_str(), i686_linker.as_str());
-
-        let mut toolsets = Vec::new();
-        toolsets.push(aarch64);
-        toolsets.push(armv7);
-        toolsets.push(i686);
-
-        let config = CargoConfig::new(toolsets);
-        config.write();
+        WinConfig { targets: toolsets }
     }
 }
