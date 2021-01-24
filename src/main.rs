@@ -10,7 +10,7 @@ mod downloader_test;
 mod unarchiver_test;
 
 fn main() {
-    let mut platform = platform();
+    let platform = platform();
     let ndk_path = platform.determine_ndk_path();
 
     //TODO: download toolset
@@ -25,10 +25,10 @@ fn platform() -> impl Platform {
 
 #[cfg(target_os = "macos")]
 fn platform() -> impl Platform {
-    platform::MacConfig
+    platform::MacConfig::new()
 }
 
 #[cfg(target_os = "linux")]
 fn platform() -> impl Platform {
-    platform::LinuxConfig
+    platform::LinuxConfig::new()
 }

@@ -1,8 +1,7 @@
-use std::{collections::HashSet, env, format, path::Path};
+use std::{collections::HashSet, env, path::Path};
 
 use super::{
-    CargoConfig, ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset,
-    TargetPlatform, ToolSetConfig,
+    ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset, TargetPlatform,
 };
 
 pub struct WinConfig {
