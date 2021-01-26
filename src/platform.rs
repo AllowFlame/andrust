@@ -58,6 +58,8 @@ pub trait Platform {
     }
 
     fn download_ndk() {}
+
+    // fn get_latest_folder_name(root_path: &str) -> Option<String> {}
 }
 
 #[derive(PartialEq, Eq, Hash)]
