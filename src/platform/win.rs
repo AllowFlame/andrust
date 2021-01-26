@@ -17,6 +17,11 @@ impl Platform for WinConfig {
                 None
             }
         })
+        // .or_else(|| {
+        //     env::var("ANDROID_HOME").ok().and_then(|path| {
+        //         let ndk_root = format!("{}/ndk", path.as_str());
+        //     })
+        // })
     }
 
     fn determine_ndk_path(&self) -> PlatformResult<String> {
