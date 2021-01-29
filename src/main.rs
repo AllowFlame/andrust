@@ -11,13 +11,11 @@ mod unarchiver_test;
 
 fn main() {
     let platform = platform();
-    let _ = platform::WinConfig::search_ndk_root_path();
+    let ndk_path = platform.determine_ndk_path();
 
-    // let ndk_path = platform.determine_ndk_path();
-
-    // //TODO: download toolset
-    // let ndk_path = ndk_path.unwrap();
-    // platform.setup_config(ndk_path.as_str());
+    //TODO: download toolset
+    let ndk_path = ndk_path.unwrap();
+    platform.setup_config(ndk_path.as_str());
 }
 
 #[cfg(target_os = "windows")]
