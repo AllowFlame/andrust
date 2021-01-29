@@ -1,4 +1,10 @@
-use std::{collections::HashSet, env, path::Path};
+use std::{
+    self,
+    collections::HashSet,
+    env,
+    fs::{DirEntry, File},
+    path::Path,
+};
 
 use super::{
     ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset, TargetPlatform,
@@ -10,18 +16,47 @@ pub struct WinConfig {
 
 impl Platform for WinConfig {
     fn search_ndk_root_path() -> Option<String> {
-        env::var("NDK_TOOL_ROOT").ok().and_then(|path| {
-            if Path::new(path.as_str()).exists() {
-                Some(path)
-            } else {
-                None
-            }
-        })
-        // .or_else(|| {
-        //     env::var("ANDROID_HOME").ok().and_then(|path| {
-        //         let ndk_root = format!("{}/ndk", path.as_str());
-        //     })
-        // })
+        env::var("NDK_TOOL_ROOT")
+            .ok()
+            .and_then(|path| {
+                if Path::new(path.as_str()).exists() {
+                    Some(path)
+                } else {
+                    None
+                }
+            })
+            .or_else(|| {
+                env::var("ANDROID_HOME").ok().and_then(|path| {
+                    let ndk_root = format!("{}/ndk", path.as_str());
+                    let ndk_root = Path::new(ndk_root.as_str());
+                    if ndk_root.is_dir() {
+                        let mut latest_dir: Option<String> = None;
+                        for entry in std::fs::read_dir(ndk_root).ok()? {
+                            let entry = entry.ok()?;
+                            let meta = entry.metadata().ok()?;
+                            let modified = meta.modified().ok()?;
+
+                            println!("entry : {:?}", entry.path().as_path());
+                            if latest_dir == None {
+                                latest_dir =
+                                    Some(entry.path().as_path().to_str().unwrap().to_owned());
+                            }
+                            let latest_modified = Path::new(latest_dir.as_ref().unwrap().as_str());
+                            let latest_modified = latest_modified.metadata().unwrap();
+                            let latest_modified = latest_modified.modified().unwrap();
+
+                            if latest_dir == None || modified > latest_modified {
+                                latest_dir =
+                                    Some(entry.path().as_path().to_str().unwrap().to_owned());
+                            }
+                            println!("latest_dir : {:?}", latest_dir);
+                        }
+                        latest_dir
+                    } else {
+                        None
+                    }
+                })
+            })
     }
 
     fn determine_ndk_path(&self) -> PlatformResult<String> {
