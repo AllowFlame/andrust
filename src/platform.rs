@@ -2,7 +2,7 @@ mod linux;
 mod mac;
 mod win;
 
-use std::{collections::HashSet, fmt, format};
+use std::{self, collections::HashSet, fmt, format, path::Path, time::SystemTime};
 
 pub use linux::LinuxConfig;
 pub use mac::MacConfig;
@@ -38,8 +38,6 @@ pub trait Platform {
     }
 
     fn does_toolsets_exist(ndk_path: &str, platform_toolsets: &HashSet<TargetPlatform>) -> bool {
-        use std::path::Path;
-
         let mut does_all_exist = false;
         for target_toolset in platform_toolsets {
             let toolsets = target_toolset.to_platform_toolset();
@@ -57,9 +55,41 @@ pub trait Platform {
         does_all_exist
     }
 
-    fn download_ndk() {}
+    fn get_latest_folder_name(root_path: &str) -> Option<String> {
+        let root_path = Path::new(root_path);
+        if !root_path.is_dir() {
+            return None;
+        }
 
-    // fn get_latest_folder_name(root_path: &str) -> Option<String> {}
+        let mut latest_folder = None;
+        for entry in std::fs::read_dir(root_path).ok()? {
+            let entry = entry.ok()?;
+            let entry_mod_time = entry.metadata().ok()?.modified().ok()?;
+
+            let latest_folder_mod_time = latest_folder
+                .as_ref()
+                .and_then(|folder_name: &String| {
+                    Path::new(folder_name.as_str())
+                        .metadata()
+                        .ok()?
+                        .modified()
+                        .ok()
+                })
+                .unwrap_or(SystemTime::UNIX_EPOCH);
+
+            if latest_folder_mod_time < entry_mod_time {
+                latest_folder = entry
+                    .path()
+                    .as_path()
+                    .to_str()
+                    .map(|folder_name| folder_name.to_owned());
+            }
+        }
+
+        latest_folder
+    }
+
+    fn download_ndk() {}
 }
 
 #[derive(PartialEq, Eq, Hash)]
