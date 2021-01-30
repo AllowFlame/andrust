@@ -11,6 +11,8 @@ pub struct MacConfig {
 impl Platform for MacConfig {
     fn search_ndk_root_path() -> Option<String> {
         env::var("NDK_TOOL_ROOT")
+            .or(env::var("ANDROID_HOME")
+                .map(|sdk_root| format!("{}/ndk-bundle", sdk_root.as_str())))
             .or(env::var("HOME")
                 .map(|home_path| format!("{}/Library/Android/sdk/ndk-bundle", home_path.as_str())))
             .ok()
@@ -21,11 +23,6 @@ impl Platform for MacConfig {
                     None
                 }
             })
-        // .or_else(|| {
-        //     env::var("ANDROID_HOME").ok().and_then(|path| {
-        //         let ndk_root = format!("{}/ndk", path.as_str());
-        //     })
-        // })
     }
 
     fn determine_ndk_path(&self) -> PlatformResult<String> {
