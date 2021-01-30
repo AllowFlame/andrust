@@ -38,7 +38,7 @@ pub trait Platform {
     }
 
     fn does_toolsets_exist(ndk_path: &str, platform_toolsets: &HashSet<TargetPlatform>) -> bool {
-        let mut does_all_exist = false;
+        let mut does_all_exist = true;
         for target_toolset in platform_toolsets {
             let toolsets = target_toolset.to_platform_toolset();
             let ar_path = format!("{}/{}", ndk_path, toolsets.ar());
