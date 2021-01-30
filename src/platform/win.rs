@@ -20,8 +20,8 @@ impl Platform for WinConfig {
                 }
             })
             .or_else(|| {
-                env::var("ANDROID_HOME").ok().and_then(|path| {
-                    let ndk_root = format!("{}/ndk", path.as_str());
+                env::var("ANDROID_HOME").ok().and_then(|sdk_root| {
+                    let ndk_root = format!("{}/ndk", sdk_root.as_str());
                     WinConfig::get_latest_folder_name(ndk_root.as_str())
                 })
             })
@@ -73,7 +73,7 @@ impl Platform for WinConfig {
 
 impl WinConfig {
     pub fn new() -> Self {
-        let aarch64_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar";
+        let aarch64_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar.exe";
         let aarch64_linker =
             "toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang.cmd";
         let aarch64 = PlatformToolset::new(
@@ -82,7 +82,7 @@ impl WinConfig {
             aarch64_linker.to_owned(),
         );
 
-        let armv7_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ar";
+        let armv7_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ar.exe";
         let armv7_linker =
             "toolchains/llvm/prebuilt/windows-x86_64/bin/armv7a-linux-androideabi16-clang.cmd";
         let armv7 = PlatformToolset::new(
@@ -91,7 +91,7 @@ impl WinConfig {
             armv7_linker.to_owned(),
         );
 
-        let i686_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ar";
+        let i686_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ar.exe";
         let i686_linker =
             "toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android16-clang.cmd";
         let i686 = PlatformToolset::new(
