@@ -1,125 +1,104 @@
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, HashSet},
+    path::{Path, PathBuf},
+    process::exit,
+};
 
 pub struct Command {
-    root: Option<String>,
-    name: Option<String>,
-    package: Option<String>,
-    version: Option<String>,
-    offset: Option<i32>,
+    root: Option<PathBuf>,
+    ndk_home: Option<PathBuf>,
 }
 
 impl Default for Command {
     fn default() -> Self {
         Command {
             root: None,
-            name: None,
-            package: None,
-            version: None,
-            offset: None,
+            ndk_home: None,
         }
     }
 }
 
 impl Command {
-    pub fn from(command_map: HashMap<String, String>) -> Option<Self> {
-        let mut root: Option<String> = None;
-        let mut name: Option<String> = None;
-        let mut package: Option<String> = None;
-        let mut version: Option<String> = None;
-        let mut offset: Option<i32> = None;
+    pub fn new() -> Self {
+        let args = Command::parse_args();
+        Command::from(args)
+    }
+
+    pub fn from(command_map: HashMap<String, String>) -> Self {
+        let mut root: Option<PathBuf> = None;
+        let mut ndk_home: Option<PathBuf> = None;
 
         for (opt, obj) in command_map {
             match opt.as_str() {
-                "-r" | "--root" => root = Some(obj),
-                "-n" | "--name" => name = Some(obj),
-                "-p" | "--package" => package = Some(obj),
-                "-v" | "--version" => version = Some(obj),
-                "-o" | "--offset" => offset = Some(obj.as_str().parse::<i32>().unwrap_or(0)),
+                "-r" | "--root" => root = Some(PathBuf::from(obj.as_str())),
+                "-n" | "--ndk" => ndk_home = Some(PathBuf::from(obj.as_str())),
+                "-v" | "--version" => {
+                    show_version();
+                    break;
+                }
+                "-h" | "--help" => {
+                    show_help();
+                    break;
+                }
                 _ => (),
             }
         }
 
-        if name == None && package == None && version == None && offset == None {
-            return None;
+        Command { root, ndk_home }
+    }
+
+    fn parse_args() -> HashMap<String, String> {
+        use std::env;
+
+        let args = env::args();
+
+        let mut commands = HashMap::new();
+        let mut opt: Option<String> = None;
+        for arg in args {
+            if opt == None && arg.as_str().starts_with("-") {
+                opt = Some(arg);
+            } else if opt != None {
+                commands.insert(opt.unwrap(), arg);
+                opt = None;
+            }
         }
 
-        Some(Command {
-            root,
-            name,
-            package,
-            version,
-            offset,
-        })
+        if opt != None {
+            commands.insert(opt.unwrap(), "".to_owned());
+        }
+
+        commands
     }
 
-    pub fn root(&self) -> Option<&String> {
-        self.root.as_ref()
+    pub fn root(&self) -> Option<&Path> {
+        self.root.as_ref().map(|root| root.as_path())
     }
 
-    pub fn name(&self) -> Option<&String> {
-        self.name.as_ref()
-    }
-
-    pub fn package(&self) -> Option<&String> {
-        self.package.as_ref()
-    }
-
-    pub fn version(&self) -> Option<&String> {
-        self.version.as_ref()
-    }
-
-    pub fn offset(&self) -> Option<i32> {
-        self.offset
-    }
-
-    pub fn _consume_name(&mut self, name: String) {
-        self.name = Some(name);
-    }
-
-    pub fn consume_package(&mut self, package: String) {
-        self.package = Some(package);
-    }
-
-    pub fn consume_version(&mut self, version: String) {
-        self.version = Some(version);
-    }
-
-    pub fn consume_offset(&mut self, offset: i32) {
-        self.offset = Some(offset);
+    pub fn ndk_home(&self) -> Option<&Path> {
+        self.ndk_home.as_ref().map(|home| home.as_path())
     }
 }
 
-pub fn parse_args() -> HashMap<String, String> {
-    use std::env;
-
-    let args = env::args();
-
-    let mut commands = HashMap::new();
-    let mut opt: Option<String> = None;
-    for arg in args {
-        if opt == None && arg.as_str().starts_with("-") {
-            opt = Some(arg);
-        } else if opt != None {
-            commands.insert(opt.unwrap(), arg);
-            opt = None;
-        }
-    }
-
-    commands
+pub fn show_version() {
+    const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+    println!(
+        r#"andrust {}
+        "#,
+        VERSION
+    );
 }
 
 pub fn show_help() {
     println!(
-        r#"
-andrust is a helper to set cross compilation configuration for rust project
+        r#"andrust is a helper to set up android cross compilation configuration for rust project
+
 USAGE:
-    rn_renamer [OPTIONS] [OBJECT]
+    andrust [OPTIONS] [OBJECT]
+
 OPTIONS:
-    -r, --root              Set RN root directory, default path is .
-    -n, --name              Set application Name
-    -p, --package           Set application package name
-    -v, --version           Set version name
-    -o, --offset            Set version code offset
+    -r, --root              Set rust project root directory, default path is .
+    -h, --home              Set NDK home directory
+    -v, --version           Prints version information
     -h, --help              Prints help information
     "#
     );
