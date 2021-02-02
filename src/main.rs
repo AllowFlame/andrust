@@ -3,7 +3,7 @@ mod downloader;
 mod platform;
 mod unarchiver;
 
-use command::Command;
+use command::{Command, CommandState};
 use platform::Platform;
 
 #[cfg(test)]
@@ -12,7 +12,10 @@ mod downloader_test;
 mod unarchiver_test;
 
 fn main() {
-    let command = Command::new();
+    let command = match CommandState::new() {
+        CommandState::Options(command) => command,
+        CommandState::ExitWithPrint => return,
+    };
 
     let platform = platform();
     let ndk_path = platform.determine_ndk_path();
