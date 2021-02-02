@@ -1,8 +1,12 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     path::{Path, PathBuf},
-    process::exit,
 };
+
+pub enum CommandState {
+    Options(Command),
+    ExitWithPrint,
+}
 
 pub struct Command {
     root: Option<PathBuf>,
@@ -18,10 +22,10 @@ impl Default for Command {
     }
 }
 
-impl Command {
+impl CommandState {
     pub fn new() -> Self {
-        let args = Command::parse_args();
-        Command::from(args)
+        let args = CommandState::parse_args();
+        CommandState::from(args)
     }
 
     pub fn from(command_map: HashMap<String, String>) -> Self {
@@ -34,17 +38,17 @@ impl Command {
                 "-n" | "--ndk" => ndk_home = Some(PathBuf::from(obj.as_str())),
                 "-v" | "--version" => {
                     show_version();
-                    break;
+                    return CommandState::ExitWithPrint;
                 }
                 "-h" | "--help" => {
                     show_help();
-                    break;
+                    return CommandState::ExitWithPrint;
                 }
                 _ => (),
             }
         }
 
-        Command { root, ndk_home }
+        CommandState::Options(Command { root, ndk_home })
     }
 
     fn parse_args() -> HashMap<String, String> {
@@ -69,7 +73,9 @@ impl Command {
 
         commands
     }
+}
 
+impl Command {
     pub fn root(&self) -> Option<&Path> {
         self.root.as_ref().map(|root| root.as_path())
     }
