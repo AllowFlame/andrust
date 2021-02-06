@@ -23,6 +23,12 @@ impl Platform for MacConfig {
                     None
                 }
             })
+            .or_else(|| {
+                env::var("ANDROID_HOME").ok().and_then(|sdk_root| {
+                    let ndk_root = format!("{}/ndk", sdk_root.as_str());
+                    MacConfig::get_latest_folder_name(ndk_root.as_str())
+                })
+            })
     }
 
     fn determine_ndk_path(&self) -> PlatformResult<String> {
