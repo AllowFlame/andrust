@@ -1,4 +1,9 @@
-use std::{self, collections::HashSet, env, path::Path};
+use std::{
+    self,
+    collections::HashSet,
+    env,
+    path::{Path, PathBuf},
+};
 
 use super::{
     ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset, TargetPlatform,
@@ -9,12 +14,12 @@ pub struct WinConfig {
 }
 
 impl Platform for WinConfig {
-    fn search_ndk_root_path() -> Option<String> {
+    fn search_ndk_root() -> Option<String> {
         env::var("NDK_TOOL_ROOT")
             .ok()
-            .and_then(|path| {
-                if Path::new(path.as_str()).exists() {
-                    Some(path)
+            .and_then(|ndk_root| {
+                if Path::new(ndk_root.as_str()).exists() {
+                    Some(ndk_root)
                 } else {
                     None
                 }
@@ -27,10 +32,10 @@ impl Platform for WinConfig {
             })
     }
 
-    fn determine_ndk_path(&self) -> PlatformResult<String> {
-        let root_path = WinConfig::search_ndk_root_path()
+    fn determine_ndk_root(&self) -> PlatformResult<String> {
+        let ndk_root: Option<String> = WinConfig::search_ndk_root()
             .or_else(|| {
-                let path = WinConfig::ask_root_path();
+                let path = WinConfig::ask_ndk_root();
                 if Path::new(path.as_str()).exists() {
                     Some(path)
                 } else {
@@ -47,7 +52,7 @@ impl Platform for WinConfig {
                 }
             });
 
-        match root_path {
+        match ndk_root {
             Some(path) => Result::Ok(path),
             None => Result::Err(PlatformError::ToolsetDoesNotExist),
         }
@@ -57,17 +62,17 @@ impl Platform for WinConfig {
         &self.targets
     }
 
-    fn setup_config(self, root_path: &str) {
+    fn setup_config(self, ndk_root: &str, proj_root: Option<PathBuf>) {
         use std::iter::FromIterator;
 
         let toolsets = self
             .targets
             .into_iter()
-            .map(|target| target.add_root_path(root_path));
+            .map(|target| target.add_ndk_root(ndk_root));
         let toolsets = HashSet::from_iter(toolsets);
 
         let writer = ConfigWriter::new(&toolsets);
-        writer.write();
+        writer.write(None);
     }
 }
 

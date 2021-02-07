@@ -18,7 +18,7 @@ fn main() {
     };
 
     let platform = platform();
-    let ndk_path = platform.determine_ndk_path();
+    let ndk_path = platform.determine_ndk_root();
     println!("ndk_path : {:?}", &ndk_path);
 
     //TODO: download toolset
