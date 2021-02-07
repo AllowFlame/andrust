@@ -1,4 +1,8 @@
-use std::{collections::HashSet, env, format, path::Path};
+use std::{
+    collections::HashSet,
+    env, format,
+    path::{Path, PathBuf},
+};
 
 use super::{
     ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset, TargetPlatform,
@@ -9,7 +13,7 @@ pub struct MacConfig {
 }
 
 impl Platform for MacConfig {
-    fn search_ndk_root_path() -> Option<String> {
+    fn search_ndk_root() -> Option<String> {
         env::var("NDK_TOOL_ROOT")
             .or(env::var("ANDROID_HOME")
                 .map(|sdk_root| format!("{}/ndk-bundle", sdk_root.as_str())))
@@ -31,10 +35,10 @@ impl Platform for MacConfig {
             })
     }
 
-    fn determine_ndk_path(&self) -> PlatformResult<String> {
-        let root_path = MacConfig::search_ndk_root_path()
+    fn determine_ndk_root(&self) -> PlatformResult<String> {
+        let root_path = MacConfig::search_ndk_root()
             .or_else(|| {
-                let path = MacConfig::ask_root_path();
+                let path = MacConfig::ask_ndk_root();
                 if Path::new(path.as_str()).exists() {
                     Some(path)
                 } else {
@@ -61,17 +65,17 @@ impl Platform for MacConfig {
         &self.targets
     }
 
-    fn setup_config(self, root_path: &str) {
+    fn setup_config(self, root_path: &str, proj_root: Option<PathBuf>) {
         use std::iter::FromIterator;
 
         let toolsets = self
             .targets
             .into_iter()
-            .map(|target| target.add_root_path(root_path));
+            .map(|target| target.add_ndk_root(root_path));
         let toolsets = HashSet::from_iter(toolsets);
 
         let writer = ConfigWriter::new(&toolsets);
-        writer.write();
+        writer.write(None);
     }
 }
 

@@ -2,21 +2,27 @@ mod linux;
 mod mac;
 mod win;
 
-use std::{self, collections::HashSet, fmt, format, path::Path, time::SystemTime};
+use std::{
+    self,
+    collections::HashSet,
+    fmt, format,
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
 
 pub use linux::LinuxConfig;
 pub use mac::MacConfig;
 pub use win::WinConfig;
 
 pub trait Platform {
-    fn search_ndk_root_path() -> Option<String>;
-    fn determine_ndk_path(&self) -> PlatformResult<String>;
+    fn search_ndk_root() -> Option<String>;
+    fn determine_ndk_root(&self) -> PlatformResult<String>;
 
     fn targets(&self) -> &HashSet<TargetPlatform>;
 
-    fn setup_config(self, ndk_path: &str);
+    fn setup_config(self, ndk_path: &str, proj_root: Option<PathBuf>);
 
-    fn ask_root_path() -> String {
+    fn ask_ndk_root() -> String {
         use std::io::{stdin, stdout, Write};
 
         let mut user_input = String::new();
@@ -104,11 +110,11 @@ impl PlatformToolset {
         PlatformToolset { target, ar, linker }
     }
 
-    pub fn clone_with_root_path(self, root_path: &str) -> Self {
+    pub fn clone_with_ndk_root(self, ndk_root: &str) -> Self {
         PlatformToolset {
             target: self.target,
-            ar: format!("{}/{}", root_path, self.ar()),
-            linker: format!("{}/{}", root_path, self.linker()),
+            ar: format!("{}/{}", ndk_root, self.ar()),
+            linker: format!("{}/{}", ndk_root, self.linker()),
         }
     }
 
@@ -146,17 +152,15 @@ pub enum TargetPlatform {
 }
 
 impl TargetPlatform {
-    pub fn add_root_path(self, root_path: &str) -> Self {
+    pub fn add_ndk_root(self, root_path: &str) -> Self {
         match self {
             TargetPlatform::Aarch64(aarch64) => {
-                TargetPlatform::Aarch64(aarch64.clone_with_root_path(root_path))
+                TargetPlatform::Aarch64(aarch64.clone_with_ndk_root(root_path))
             }
             TargetPlatform::Armv7(armv7) => {
-                TargetPlatform::Armv7(armv7.clone_with_root_path(root_path))
+                TargetPlatform::Armv7(armv7.clone_with_ndk_root(root_path))
             }
-            TargetPlatform::I686(i686) => {
-                TargetPlatform::I686(i686.clone_with_root_path(root_path))
-            }
+            TargetPlatform::I686(i686) => TargetPlatform::I686(i686.clone_with_ndk_root(root_path)),
         }
     }
 
@@ -188,13 +192,18 @@ impl<'a> ConfigWriter<'a> {
         config_content
     }
 
-    pub fn write(self) {
+    pub fn write(self, proj_root: Option<PathBuf>) {
         use std::fs;
         use std::io::Write;
-        use std::path::PathBuf;
 
         let file_name = ".cargo/config";
-        let path = PathBuf::from(file_name);
+        let path = proj_root
+            .map(|mut root| {
+                root.push("/");
+                root.push(file_name);
+                root
+            })
+            .unwrap_or(PathBuf::from(file_name));
         path.parent().and_then(|parent_path| {
             if !parent_path.exists() {
                 fs::create_dir_all(parent_path).ok()

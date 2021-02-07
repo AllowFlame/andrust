@@ -9,15 +9,15 @@ pub enum CommandState {
 }
 
 pub struct Command {
-    root: Option<PathBuf>,
-    ndk_home: Option<PathBuf>,
+    proj_root: Option<PathBuf>,
+    ndk_root: Option<PathBuf>,
 }
 
 impl Default for Command {
     fn default() -> Self {
         Command {
-            root: None,
-            ndk_home: None,
+            proj_root: None,
+            ndk_root: None,
         }
     }
 }
@@ -29,12 +29,12 @@ impl CommandState {
     }
 
     pub fn from(command_map: HashMap<String, String>) -> Self {
-        let mut root: Option<PathBuf> = None;
+        let mut proj_root: Option<PathBuf> = None;
         let mut ndk_home: Option<PathBuf> = None;
 
         for (opt, obj) in command_map {
             match opt.as_str() {
-                "-r" | "--root" => root = Some(PathBuf::from(obj.as_str())),
+                "-r" | "--root" => proj_root = Some(PathBuf::from(obj.as_str())),
                 "-n" | "--ndk" => ndk_home = Some(PathBuf::from(obj.as_str())),
                 "-v" | "--version" => {
                     show_version();
@@ -48,7 +48,10 @@ impl CommandState {
             }
         }
 
-        CommandState::Options(Command { root, ndk_home })
+        CommandState::Options(Command {
+            proj_root,
+            ndk_root: ndk_home,
+        })
     }
 
     fn parse_args() -> HashMap<String, String> {
@@ -77,11 +80,11 @@ impl CommandState {
 
 impl Command {
     pub fn root(&self) -> Option<&Path> {
-        self.root.as_ref().map(|root| root.as_path())
+        self.proj_root.as_ref().map(|root| root.as_path())
     }
 
     pub fn ndk_home(&self) -> Option<&Path> {
-        self.ndk_home.as_ref().map(|home| home.as_path())
+        self.ndk_root.as_ref().map(|home| home.as_path())
     }
 }
 
