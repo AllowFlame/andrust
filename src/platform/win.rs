@@ -60,13 +60,15 @@ impl Platform for WinConfig {
         &self.targets
     }
 
-    fn setup_config(self, ndk_root: &str, proj_root: Option<PathBuf>) {
+    fn setup_config(self, ndk_root: &Path, proj_root: Option<PathBuf>) {
         use std::iter::FromIterator;
 
         let toolsets = self
             .targets
             .into_iter()
-            .map(|target| target.add_ndk_root(ndk_root));
+            .map(|target| target.add_ndk_root(ndk_root))
+            .filter(|target_adding_result| target_adding_result.is_ok())
+            .map(|filtered_target| filtered_target.unwrap());
         let toolsets = HashSet::from_iter(toolsets);
 
         let writer = ConfigWriter::new(&toolsets);

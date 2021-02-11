@@ -74,13 +74,15 @@ impl Platform for LinuxConfig {
         &self.targets
     }
 
-    fn setup_config(self, root_path: &str, proj_root: Option<PathBuf>) {
+    fn setup_config(self, root_path: &Path, proj_root: Option<PathBuf>) {
         use std::iter::FromIterator;
 
         let toolsets = self
             .targets
             .into_iter()
-            .map(|target| target.add_ndk_root(root_path));
+            .map(|target| target.add_ndk_root(root_path))
+            .filter(|target_adding_result| target_adding_result.is_ok())
+            .map(|filtered_target| filtered_target.unwrap());
         let toolsets = HashSet::from_iter(toolsets);
 
         let writer = ConfigWriter::new(&toolsets);

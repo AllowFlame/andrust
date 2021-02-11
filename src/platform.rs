@@ -20,7 +20,7 @@ pub trait Platform {
 
     fn targets(&self) -> &HashSet<TargetPlatform>;
 
-    fn setup_config(self, ndk_root: &str, proj_root: Option<PathBuf>);
+    fn setup_config(self, ndk_root: &Path, proj_root: Option<PathBuf>);
 
     fn ask_ndk_root() -> String {
         use std::io::{stdin, stdout, Write};
@@ -114,12 +114,13 @@ impl PlatformToolset {
         PlatformToolset { target, ar, linker }
     }
 
-    pub fn clone_with_ndk_root(self, ndk_root: &str) -> Self {
-        PlatformToolset {
+    pub fn clone_with_ndk_root(self, ndk_root: &Path) -> PlatformResult<Self> {
+        let root = ndk_root.to_str().ok_or(PlatformError::WrongPathName)?;
+        Ok(PlatformToolset {
             target: self.target,
-            ar: format!("{}/{}", ndk_root, self.ar()),
-            linker: format!("{}/{}", ndk_root, self.linker()),
-        }
+            ar: format!("{}/{}", root, self.ar()),
+            linker: format!("{}/{}", root, self.linker()),
+        })
     }
 
     pub fn format_target(&self) -> String {
@@ -156,15 +157,17 @@ pub enum TargetPlatform {
 }
 
 impl TargetPlatform {
-    pub fn add_ndk_root(self, root_path: &str) -> Self {
+    pub fn add_ndk_root(self, root_path: &Path) -> PlatformResult<Self> {
         match self {
-            TargetPlatform::Aarch64(aarch64) => {
-                TargetPlatform::Aarch64(aarch64.clone_with_ndk_root(root_path))
-            }
+            TargetPlatform::Aarch64(aarch64) => Ok(TargetPlatform::Aarch64(
+                aarch64.clone_with_ndk_root(root_path)?,
+            )),
             TargetPlatform::Armv7(armv7) => {
-                TargetPlatform::Armv7(armv7.clone_with_ndk_root(root_path))
+                Ok(TargetPlatform::Armv7(armv7.clone_with_ndk_root(root_path)?))
             }
-            TargetPlatform::I686(i686) => TargetPlatform::I686(i686.clone_with_ndk_root(root_path)),
+            TargetPlatform::I686(i686) => {
+                Ok(TargetPlatform::I686(i686.clone_with_ndk_root(root_path)?))
+            }
         }
     }
 
@@ -228,12 +231,14 @@ type PlatformResult<T> = Result<T, PlatformError>;
 #[derive(Debug)]
 pub enum PlatformError {
     ToolsetDoesNotExist,
+    WrongPathName,
 }
 
 impl fmt::Display for PlatformError {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             PlatformError::ToolsetDoesNotExist => write!(formatter, "ToolsetDoesNotExist"),
+            PlatformError::WrongPathName => write!(formatter, "WrongPathName"),
         }
     }
 }
