@@ -13,7 +13,7 @@ pub struct MacConfig {
 }
 
 impl Platform for MacConfig {
-    fn search_ndk_root() -> Option<String> {
+    fn search_ndk_root() -> Option<PathBuf> {
         env::var("NDK_TOOL_ROOT")
             .or(env::var("ANDROID_HOME")
                 .map(|sdk_root| format!("{}/ndk-bundle", sdk_root.as_str())))
@@ -33,13 +33,15 @@ impl Platform for MacConfig {
                     MacConfig::get_latest_folder_name(ndk_root.as_str())
                 })
             })
+            .map(|ndk_root| PathBuf::from(ndk_root.as_str()))
     }
 
-    fn determine_ndk_root(&self) -> PlatformResult<String> {
-        let root_path = MacConfig::search_ndk_root()
+    fn determine_ndk_root(&self) -> PlatformResult<PathBuf> {
+        MacConfig::search_ndk_root()
             .or_else(|| {
-                let path = MacConfig::ask_ndk_root();
-                if Path::new(path.as_str()).exists() {
+                let user_input_path = MacConfig::ask_ndk_root();
+                let path = PathBuf::from(user_input_path.as_str());
+                if path.exists() {
                     Some(path)
                 } else {
                     None
@@ -47,18 +49,14 @@ impl Platform for MacConfig {
             })
             .and_then(|path| {
                 let toolsets = self.targets();
-                let does_exist = MacConfig::does_toolsets_exist(path.as_str(), toolsets);
+                let does_exist = MacConfig::does_toolsets_exist(path.as_path(), toolsets);
                 if does_exist {
                     Some(path)
                 } else {
                     None
                 }
-            });
-
-        match root_path {
-            Some(path) => Result::Ok(path),
-            None => Result::Err(PlatformError::ToolsetDoesNotExist),
-        }
+            })
+            .ok_or(PlatformError::ToolsetDoesNotExist)
     }
 
     fn targets(&self) -> &HashSet<TargetPlatform> {

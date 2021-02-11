@@ -14,7 +14,7 @@ pub struct WinConfig {
 }
 
 impl Platform for WinConfig {
-    fn search_ndk_root() -> Option<String> {
+    fn search_ndk_root() -> Option<PathBuf> {
         env::var("NDK_TOOL_ROOT")
             .ok()
             .and_then(|ndk_root| {
@@ -30,13 +30,15 @@ impl Platform for WinConfig {
                     WinConfig::get_latest_folder_name(ndk_root.as_str())
                 })
             })
+            .map(|ndk_root| PathBuf::from(ndk_root.as_str()))
     }
 
-    fn determine_ndk_root(&self) -> PlatformResult<String> {
-        let ndk_root: Option<String> = WinConfig::search_ndk_root()
+    fn determine_ndk_root(&self) -> PlatformResult<PathBuf> {
+        WinConfig::search_ndk_root()
             .or_else(|| {
-                let path = WinConfig::ask_ndk_root();
-                if Path::new(path.as_str()).exists() {
+                let user_input_path = WinConfig::ask_ndk_root();
+                let path = PathBuf::from(user_input_path.as_str());
+                if path.exists() {
                     Some(path)
                 } else {
                     None
@@ -44,18 +46,14 @@ impl Platform for WinConfig {
             })
             .and_then(|path| {
                 let toolsets = self.targets();
-                let does_exist = WinConfig::does_toolsets_exist(path.as_str(), toolsets);
+                let does_exist = WinConfig::does_toolsets_exist(path.as_path(), toolsets);
                 if does_exist {
                     Some(path)
                 } else {
                     None
                 }
-            });
-
-        match ndk_root {
-            Some(path) => Result::Ok(path),
-            None => Result::Err(PlatformError::ToolsetDoesNotExist),
-        }
+            })
+            .ok_or(PlatformError::ToolsetDoesNotExist)
     }
 
     fn targets(&self) -> &HashSet<TargetPlatform> {
@@ -72,8 +70,88 @@ impl Platform for WinConfig {
         let toolsets = HashSet::from_iter(toolsets);
 
         let writer = ConfigWriter::new(&toolsets);
-        writer.write(None);
+        writer.write(proj_root);
     }
+
+    fn ask_ndk_root() -> String {
+        use std::io::{stdin, stdout, Write};
+
+        let mut user_input = String::new();
+        println!(r#"Can't find NDK root path. System variable "NDK_TOOL_ROOT" is not set."#);
+        print!("Please enter NDK root path: ");
+        let _ = stdout().flush();
+        stdin()
+            .read_line(&mut user_input)
+            .expect("Did not enter a correct string");
+        if let Some('\n') = user_input.chars().next_back() {
+            user_input.pop();
+        }
+        if let Some('\r') = user_input.chars().next_back() {
+            user_input.pop();
+        }
+        println!("You typed: {}", user_input);
+
+        user_input
+    }
+
+    fn does_toolsets_exist(ndk_root: &Path, platform_toolsets: &HashSet<TargetPlatform>) -> bool {
+        let mut does_all_exist = true;
+        for target_toolset in platform_toolsets {
+            let toolsets = target_toolset.to_platform_toolset();
+            let ndk_root = match ndk_root.to_str() {
+                Some(path) => path,
+                None => return false,
+            };
+            let ar_path = format!("{}/{}", ndk_root, toolsets.ar());
+            let linker_path = format!("{}/{}", ndk_root, toolsets.linker());
+
+            does_all_exist = does_all_exist
+                && Path::new(ar_path.as_str()).exists()
+                && Path::new(linker_path.as_str()).exists();
+
+            if !does_all_exist {
+                break;
+            }
+        }
+        does_all_exist
+    }
+
+    fn get_latest_folder_name(root_path: &str) -> Option<String> {
+        let root_path = Path::new(root_path);
+        if !root_path.is_dir() {
+            return None;
+        }
+
+        let mut latest_folder = None;
+        for entry in std::fs::read_dir(root_path).ok()? {
+            let entry = entry.ok()?;
+            let entry_mod_time = entry.metadata().ok()?.modified().ok()?;
+
+            let latest_folder_mod_time = latest_folder
+                .as_ref()
+                .and_then(|folder_name: &String| {
+                    Path::new(folder_name.as_str())
+                        .metadata()
+                        .ok()?
+                        .modified()
+                        .ok()
+                })
+                .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+
+            if latest_folder_mod_time < entry_mod_time {
+                latest_folder = entry
+                    .path()
+                    .as_path()
+                    .to_str()
+                    .map(|folder_name| folder_name.to_owned());
+            }
+        }
+
+        latest_folder
+    }
+
+    //TODO: implement download logic
+    fn download_ndk() {}
 }
 
 impl WinConfig {

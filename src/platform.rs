@@ -15,12 +15,12 @@ pub use mac::MacConfig;
 pub use win::WinConfig;
 
 pub trait Platform {
-    fn search_ndk_root() -> Option<String>;
-    fn determine_ndk_root(&self) -> PlatformResult<String>;
+    fn search_ndk_root() -> Option<PathBuf>;
+    fn determine_ndk_root(&self) -> PlatformResult<PathBuf>;
 
     fn targets(&self) -> &HashSet<TargetPlatform>;
 
-    fn setup_config(self, ndk_path: &str, proj_root: Option<PathBuf>);
+    fn setup_config(self, ndk_root: &str, proj_root: Option<PathBuf>);
 
     fn ask_ndk_root() -> String {
         use std::io::{stdin, stdout, Write};
@@ -43,12 +43,16 @@ pub trait Platform {
         user_input
     }
 
-    fn does_toolsets_exist(ndk_path: &str, platform_toolsets: &HashSet<TargetPlatform>) -> bool {
+    fn does_toolsets_exist(ndk_root: &Path, platform_toolsets: &HashSet<TargetPlatform>) -> bool {
         let mut does_all_exist = true;
         for target_toolset in platform_toolsets {
             let toolsets = target_toolset.to_platform_toolset();
-            let ar_path = format!("{}/{}", ndk_path, toolsets.ar());
-            let linker_path = format!("{}/{}", ndk_path, toolsets.linker());
+            let ndk_root = match ndk_root.to_str() {
+                Some(path) => path,
+                None => return false,
+            };
+            let ar_path = format!("{}/{}", ndk_root, toolsets.ar());
+            let linker_path = format!("{}/{}", ndk_root, toolsets.linker());
 
             does_all_exist = does_all_exist
                 && Path::new(ar_path.as_str()).exists()

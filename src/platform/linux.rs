@@ -13,7 +13,7 @@ pub struct LinuxConfig {
 }
 
 impl Platform for LinuxConfig {
-    fn search_ndk_root() -> Option<String> {
+    fn search_ndk_root() -> Option<PathBuf> {
         env::var("NDK_TOOL_ROOT")
             .or(env::var("HOME")
                 .map(|home_path| format!("{}/tools/Android/sdk/ndk-bundle", home_path.as_str())))
@@ -25,6 +25,7 @@ impl Platform for LinuxConfig {
                     None
                 }
             })
+            .map(|ndk_root| PathBuf::from(ndk_root.as_str()))
         // .or_else(|| {
         //     env::var("ANDROID_HOME").ok().and_then(|path| {
         //         let ndk_root = format!("{}/ndk", path.as_str());
@@ -32,11 +33,12 @@ impl Platform for LinuxConfig {
         // })
     }
 
-    fn determine_ndk_root(&self) -> PlatformResult<String> {
+    fn determine_ndk_root(&self) -> PlatformResult<PathBuf> {
         let root_path = LinuxConfig::search_ndk_root()
             .or_else(|| {
-                let path = LinuxConfig::ask_ndk_root();
-                if Path::new(path.as_str()).exists() {
+                let user_input_path = LinuxConfig::ask_ndk_root();
+                let path = PathBuf::from(user_input_path.as_str());
+                if path.exists() {
                     Some(path)
                 } else {
                     None
@@ -44,7 +46,7 @@ impl Platform for LinuxConfig {
             })
             .and_then(|path| {
                 let toolsets = self.targets();
-                let does_exist = LinuxConfig::does_toolsets_exist(path.as_str(), toolsets);
+                let does_exist = LinuxConfig::does_toolsets_exist(path.as_path(), toolsets);
                 if does_exist {
                     Some(path)
                 } else {
@@ -65,10 +67,7 @@ impl Platform for LinuxConfig {
         //         .ok()
         // };
 
-        match root_path {
-            Some(path) => Result::Ok(path),
-            None => Result::Err(PlatformError::ToolsetDoesNotExist),
-        }
+        root_path.ok_or(PlatformError::ToolsetDoesNotExist)
     }
 
     fn targets(&self) -> &HashSet<TargetPlatform> {
