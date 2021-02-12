@@ -6,11 +6,13 @@ use std::{
 };
 
 use super::{
-    ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset, TargetPlatform,
+    super::command::CommandOptions, ConfigWriter, Platform, PlatformError, PlatformResult,
+    PlatformToolset, TargetPlatform,
 };
 
 pub struct WinConfig {
     targets: HashSet<TargetPlatform>,
+    cmd_opts: Option<CommandOptions>,
 }
 
 impl Platform for WinConfig {
@@ -34,6 +36,20 @@ impl Platform for WinConfig {
     }
 
     fn determine_ndk_root(&self) -> PlatformResult<PathBuf> {
+        let input_ndk_root = self
+            .cmd_opts
+            .as_ref()
+            .and_then(|cmd_opt| cmd_opt.ndk_root());
+
+        if input_ndk_root.is_some()
+            && WinConfig::does_toolsets_exist(input_ndk_root.unwrap(), self.targets())
+        {
+            let verified_ndk_root = input_ndk_root.unwrap().to_path_buf();
+            return Ok(verified_ndk_root);
+        } else {
+            println!("input ndk root is not verified, ndk root candidates are being searched.");
+        }
+
         WinConfig::search_ndk_root()
             .or_else(|| {
                 let user_input_path = WinConfig::ask_ndk_root();
@@ -156,8 +172,26 @@ impl Platform for WinConfig {
     fn download_ndk() {}
 }
 
+impl Default for WinConfig {
+    fn default() -> Self {
+        let toolsets = WinConfig::get_toolsets();
+        WinConfig {
+            targets: toolsets,
+            cmd_opts: None,
+        }
+    }
+}
+
 impl WinConfig {
-    pub fn new() -> Self {
+    pub fn new(cmd_opts: Option<CommandOptions>) -> Self {
+        let toolsets = WinConfig::get_toolsets();
+        WinConfig {
+            targets: toolsets,
+            cmd_opts,
+        }
+    }
+
+    fn get_toolsets() -> HashSet<TargetPlatform> {
         let aarch64_ar = "toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar.exe";
         let aarch64_linker =
             "toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang.cmd";
@@ -190,6 +224,6 @@ impl WinConfig {
         toolsets.insert(TargetPlatform::Armv7(armv7));
         toolsets.insert(TargetPlatform::I686(i686));
 
-        WinConfig { targets: toolsets }
+        toolsets
     }
 }

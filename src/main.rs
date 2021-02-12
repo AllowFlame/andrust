@@ -12,12 +12,12 @@ mod downloader_test;
 mod unarchiver_test;
 
 fn main() {
-    let command = match CommandState::new() {
+    let cmd_opts = match CommandState::new() {
         CommandState::Options(command) => command,
         CommandState::ExitWithPrint => return,
     };
 
-    let platform = platform(command);
+    let platform = platform(cmd_opts);
     let ndk_path = platform.determine_ndk_root();
     println!("ndk_path : {:?}", &ndk_path);
 
@@ -31,16 +31,16 @@ fn main() {
 }
 
 #[cfg(target_os = "windows")]
-fn platform(command: CommandOptions) -> impl Platform {
-    platform::WinConfig::new()
+fn platform(cmd_opts: CommandOptions) -> impl Platform {
+    platform::WinConfig::new(Some(cmd_opts))
 }
 
 #[cfg(target_os = "macos")]
-fn platform(command: CommandOptions) -> impl Platform {
-    platform::MacConfig::new(Some(command))
+fn platform(cmd_opts: CommandOptions) -> impl Platform {
+    platform::MacConfig::new(Some(cmd_opts))
 }
 
 #[cfg(target_os = "linux")]
-fn platform(command: CommandOptions) -> impl Platform {
-    platform::LinuxConfig::new(command)
+fn platform(cmd_opts: CommandOptions) -> impl Platform {
+    platform::LinuxConfig::new(Some(cmd_opts))
 }

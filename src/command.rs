@@ -79,11 +79,11 @@ impl CommandState {
 }
 
 impl CommandOptions {
-    pub fn root(&self) -> Option<&Path> {
+    pub fn proj_root(&self) -> Option<&Path> {
         self.proj_root.as_ref().map(|root| root.as_path())
     }
 
-    pub fn ndk_home(&self) -> Option<&Path> {
+    pub fn ndk_root(&self) -> Option<&Path> {
         self.ndk_root.as_ref().map(|home| home.as_path())
     }
 }
