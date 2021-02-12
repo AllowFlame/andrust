@@ -4,18 +4,18 @@ use std::{
 };
 
 pub enum CommandState {
-    Options(Command),
+    Options(CommandOptions),
     ExitWithPrint,
 }
 
-pub struct Command {
+pub struct CommandOptions {
     proj_root: Option<PathBuf>,
     ndk_root: Option<PathBuf>,
 }
 
-impl Default for Command {
+impl Default for CommandOptions {
     fn default() -> Self {
-        Command {
+        CommandOptions {
             proj_root: None,
             ndk_root: None,
         }
@@ -48,7 +48,7 @@ impl CommandState {
             }
         }
 
-        CommandState::Options(Command {
+        CommandState::Options(CommandOptions {
             proj_root,
             ndk_root: ndk_home,
         })
@@ -78,7 +78,7 @@ impl CommandState {
     }
 }
 
-impl Command {
+impl CommandOptions {
     pub fn root(&self) -> Option<&Path> {
         self.proj_root.as_ref().map(|root| root.as_path())
     }

@@ -6,10 +6,12 @@ use std::{
 
 use super::{
     ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset, TargetPlatform,
+    super::command::CommandOptions
 };
 
 pub struct MacConfig {
     targets: HashSet<TargetPlatform>,
+    cmd_opts: Option<CommandOptions>,
 }
 
 impl Platform for MacConfig {
@@ -79,8 +81,20 @@ impl Platform for MacConfig {
     }
 }
 
+impl Default for MacConfig {
+    fn default() -> Self {
+        let toolsets = MacConfig::get_toolsets();
+        MacConfig { targets: toolsets, cmd_opts: None }
+    }
+}
+
 impl MacConfig {
-    pub fn new() -> Self {
+    pub fn new(cmd_opts: Option<CommandOptions>) -> Self {
+        let toolsets = MacConfig::get_toolsets();
+        MacConfig { targets: toolsets, cmd_opts }
+    }
+
+    fn get_toolsets() -> HashSet<TargetPlatform> {
         let aarch64_ar = "toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar";
         let aarch64_linker =
             "toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang";
@@ -112,6 +126,6 @@ impl MacConfig {
         toolsets.insert(TargetPlatform::Armv7(armv7));
         toolsets.insert(TargetPlatform::I686(i686));
 
-        MacConfig { targets: toolsets }
+        toolsets
     }
 }
