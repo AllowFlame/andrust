@@ -76,7 +76,7 @@ impl Platform for WinConfig {
         &self.targets
     }
 
-    fn setup_config(self, ndk_root: &Path, proj_root: Option<PathBuf>) {
+    fn setup_config(self, ndk_root: &Path) {
         use std::iter::FromIterator;
 
         let toolsets = self
@@ -87,6 +87,9 @@ impl Platform for WinConfig {
             .map(|filtered_target| filtered_target.unwrap());
         let toolsets = HashSet::from_iter(toolsets);
 
+        let proj_root = self
+            .cmd_opts
+            .and_then(|opts| opts.proj_root().map(|path| path.to_path_buf()));
         let writer = ConfigWriter::new(&toolsets);
         writer.write(proj_root);
     }

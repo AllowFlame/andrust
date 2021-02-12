@@ -5,8 +5,8 @@ use std::{
 };
 
 use super::{
-    ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset, TargetPlatform,
-    super::command::CommandOptions
+    super::command::CommandOptions, ConfigWriter, Platform, PlatformError, PlatformResult,
+    PlatformToolset, TargetPlatform,
 };
 
 pub struct MacConfig {
@@ -65,7 +65,7 @@ impl Platform for MacConfig {
         &self.targets
     }
 
-    fn setup_config(self, root_path: &Path, proj_root: Option<PathBuf>) {
+    fn setup_config(self, root_path: &Path) {
         use std::iter::FromIterator;
 
         let toolsets = self
@@ -77,21 +77,27 @@ impl Platform for MacConfig {
         let toolsets = HashSet::from_iter(toolsets);
 
         let writer = ConfigWriter::new(&toolsets);
-        writer.write(proj_root);
+        writer.write(None);
     }
 }
 
 impl Default for MacConfig {
     fn default() -> Self {
         let toolsets = MacConfig::get_toolsets();
-        MacConfig { targets: toolsets, cmd_opts: None }
+        MacConfig {
+            targets: toolsets,
+            cmd_opts: None,
+        }
     }
 }
 
 impl MacConfig {
     pub fn new(cmd_opts: Option<CommandOptions>) -> Self {
         let toolsets = MacConfig::get_toolsets();
-        MacConfig { targets: toolsets, cmd_opts }
+        MacConfig {
+            targets: toolsets,
+            cmd_opts,
+        }
     }
 
     fn get_toolsets() -> HashSet<TargetPlatform> {
