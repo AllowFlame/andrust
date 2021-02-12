@@ -3,7 +3,7 @@ mod downloader;
 mod platform;
 mod unarchiver;
 
-use command::{Command, CommandState};
+use command::CommandState;
 use platform::Platform;
 
 #[cfg(test)]

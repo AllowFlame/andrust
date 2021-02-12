@@ -86,7 +86,7 @@ impl Platform for LinuxConfig {
         let toolsets = HashSet::from_iter(toolsets);
 
         let writer = ConfigWriter::new(&toolsets);
-        writer.write(None);
+        writer.write(proj_root);
     }
 }
 
