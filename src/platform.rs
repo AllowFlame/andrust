@@ -18,7 +18,7 @@ pub trait Platform {
     fn search_ndk_root() -> Option<PathBuf>;
     fn determine_ndk_root(&self) -> PlatformResult<PathBuf>;
     fn targets(&self) -> &HashSet<TargetPlatform>;
-    fn setup_config(self, ndk_root: &Path, proj_root: Option<PathBuf>);
+    fn setup_config(self, ndk_root: &Path);
 
     fn ask_ndk_root() -> String {
         use std::io::{stdin, stdout, Write};

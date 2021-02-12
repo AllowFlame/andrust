@@ -74,7 +74,7 @@ impl Platform for LinuxConfig {
         &self.targets
     }
 
-    fn setup_config(self, root_path: &Path, proj_root: Option<PathBuf>) {
+    fn setup_config(self, root_path: &Path) {
         use std::iter::FromIterator;
 
         let toolsets = self
@@ -86,7 +86,7 @@ impl Platform for LinuxConfig {
         let toolsets = HashSet::from_iter(toolsets);
 
         let writer = ConfigWriter::new(&toolsets);
-        writer.write(proj_root);
+        writer.write(None);
     }
 }
 
