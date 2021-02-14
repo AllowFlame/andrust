@@ -22,11 +22,7 @@ fn main() {
     println!("ndk_path : {:?}", &ndk_path);
 
     //TODO: download toolset
-    // let ndk_path = ndk_path.unwrap();
-    // platform.setup_config(
-    //     ndk_path.unwrap().as_path(),
-    //     command.root().map(|prj_root| prj_root.to_path_buf()),
-    // );
+    platform.setup_config(ndk_path.unwrap().as_path());
     // rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 }
 
