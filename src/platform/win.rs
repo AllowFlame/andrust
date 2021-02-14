@@ -94,27 +94,6 @@ impl Platform for WinConfig {
         writer.write(proj_root);
     }
 
-    fn ask_ndk_root() -> String {
-        use std::io::{stdin, stdout, Write};
-
-        let mut user_input = String::new();
-        println!(r#"Can't find NDK root path. System variable "NDK_TOOL_ROOT" is not set."#);
-        print!("Please enter NDK root path: ");
-        let _ = stdout().flush();
-        stdin()
-            .read_line(&mut user_input)
-            .expect("Did not enter a correct string");
-        if let Some('\n') = user_input.chars().next_back() {
-            user_input.pop();
-        }
-        if let Some('\r') = user_input.chars().next_back() {
-            user_input.pop();
-        }
-        println!("You typed: {}", user_input);
-
-        user_input
-    }
-
     fn does_toolsets_exist(ndk_root: &Path, platform_toolsets: &HashSet<TargetPlatform>) -> bool {
         let mut does_all_exist = true;
         for target_toolset in platform_toolsets {
