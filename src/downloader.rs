@@ -69,6 +69,44 @@ impl Downloader {
     }
 }
 
+pub struct BuildPlatformConfig {
+    download_url: Option<Vec<String>>,
+}
+
+impl Default for BuildPlatformConfig {
+    #[cfg(target_os = "windows")]
+    fn default() -> Self {
+        let windows = vec![
+            "https://dl.google.com/android/repository/android-ndk-r21b-windows-x86_64.zip"
+                .to_owned(),
+        ];
+        BuildPlatformConfig {
+            download_url: Some(windows),
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    fn default() -> Self {
+        let windows = vec![
+            "https://dl.google.com/android/repository/android-ndk-r21b-darwin-x86_64.zip"
+                .to_owned(),
+        ];
+        BuildPlatformConfig {
+            download_url: Some(windows),
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    fn default() -> Self {
+        let windows = vec![
+            "https://dl.google.com/android/repository/android-ndk-r21b-linux-x86_64.zip".to_owned(),
+        ];
+        BuildPlatformConfig {
+            download_url: Some(windows),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DownloadConfig {
     windows: Option<Vec<String>>,
