@@ -87,22 +87,22 @@ impl Default for BuildPlatformConfig {
 
     #[cfg(target_os = "macos")]
     fn default() -> Self {
-        let windows = vec![
+        let macos = vec![
             "https://dl.google.com/android/repository/android-ndk-r21b-darwin-x86_64.zip"
                 .to_owned(),
         ];
         BuildPlatformConfig {
-            download_url: Some(windows),
+            download_url: Some(macos),
         }
     }
 
     #[cfg(target_os = "linux")]
     fn default() -> Self {
-        let windows = vec![
+        let linux = vec![
             "https://dl.google.com/android/repository/android-ndk-r21b-linux-x86_64.zip".to_owned(),
         ];
         BuildPlatformConfig {
-            download_url: Some(windows),
+            download_url: Some(linux),
         }
     }
 }
