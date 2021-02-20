@@ -56,11 +56,11 @@ impl Platform for LinuxConfig {
 
         //FIXME: following code is for downloading
         // let download = || {
-        //     use crate::downloader::{DownloadConfig, Downloader};
+        //     use crate::downloader::{BuildPlatformConfig, Downloader};
 
-        //     let config = DownloadConfig::default();
+        //     let config = BuildPlatformConfig::default();
         //     let downloader = Downloader::default();
-        //     let _ = downloader.download(config.linux().unwrap().parse().unwrap(), "ndk.zip");
+        //     let _ = downloader.download(config.download_url().unwrap().parse().unwrap(), "ndk.zip");
 
         //     env::var("HOME")
         //         .map(|home_path| format!("{}/tools", home_path.as_str()))
