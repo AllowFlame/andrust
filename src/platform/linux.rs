@@ -5,16 +5,20 @@ use std::{
 };
 
 use super::{
-    ConfigWriter, Platform, PlatformError, PlatformResult, PlatformToolset, TargetPlatform,
+    super::command::CommandOptions, ConfigWriter, Platform, PlatformError, PlatformResult,
+    PlatformToolset, TargetPlatform,
 };
 
 pub struct LinuxConfig {
     targets: HashSet<TargetPlatform>,
+    cmd_opts: Option<CommandOptions>,
 }
 
 impl Platform for LinuxConfig {
     fn search_ndk_root() -> Option<PathBuf> {
         env::var("NDK_TOOL_ROOT")
+            .or(env::var("ANDROID_HOME")
+                .map(|sdk_root| format!("{}/ndk-bundle", sdk_root.as_str())))
             .or(env::var("HOME")
                 .map(|home_path| format!("{}/tools/Android/sdk/ndk-bundle", home_path.as_str())))
             .ok()
@@ -25,15 +29,30 @@ impl Platform for LinuxConfig {
                     None
                 }
             })
+            .or_else(|| {
+                env::var("ANDROID_HOME").ok().and_then(|path| {
+                    let ndk_root = format!("{}/ndk", path.as_str());
+                    LinuxConfig::get_latest_folder_name(ndk_root.as_str())
+                })
+            })
             .map(|ndk_root| PathBuf::from(ndk_root.as_str()))
-        // .or_else(|| {
-        //     env::var("ANDROID_HOME").ok().and_then(|path| {
-        //         let ndk_root = format!("{}/ndk", path.as_str());
-        //     })
-        // })
     }
 
     fn determine_ndk_root(&self) -> PlatformResult<PathBuf> {
+        let input_ndk_root = self
+            .cmd_opts
+            .as_ref()
+            .and_then(|cmd_opt| cmd_opt.ndk_root());
+
+        if input_ndk_root.is_some()
+            && LinuxConfig::does_toolsets_exist(input_ndk_root.unwrap(), self.targets())
+        {
+            let verified_ndk_root = input_ndk_root.unwrap().to_path_buf();
+            return Ok(verified_ndk_root);
+        } else {
+            println!("input ndk root is not verified, ndk root candidates are being searched.");
+        }
+
         let root_path = LinuxConfig::search_ndk_root()
             .or_else(|| {
                 let user_input_path = LinuxConfig::ask_ndk_root();
@@ -91,8 +110,15 @@ impl Platform for LinuxConfig {
 }
 
 impl LinuxConfig {
-    pub fn new() -> Self {
-        //FIXME: toolchains path should be checked!
+    pub fn new(cmd_opts: Option<CommandOptions>) -> Self {
+        let toolsets = LinuxConfig::get_toolsets();
+        LinuxConfig {
+            targets: toolsets,
+            cmd_opts,
+        }
+    }
+
+    fn get_toolsets() -> HashSet<TargetPlatform> {
         let aarch64_ar = "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ar";
         let aarch64_linker =
             "{}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang.cmd";
@@ -125,6 +151,6 @@ impl LinuxConfig {
         toolsets.insert(TargetPlatform::Armv7(armv7));
         toolsets.insert(TargetPlatform::I686(i686));
 
-        LinuxConfig { targets: toolsets }
+        toolsets
     }
 }
