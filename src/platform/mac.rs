@@ -39,6 +39,20 @@ impl Platform for MacConfig {
     }
 
     fn determine_ndk_root(&self) -> PlatformResult<PathBuf> {
+        let input_ndk_root = self
+            .cmd_opts
+            .as_ref()
+            .and_then(|cmd_opt| cmd_opt.ndk_root());
+
+        if input_ndk_root.is_some()
+            && MacConfig::does_toolsets_exist(input_ndk_root.unwrap(), self.targets())
+        {
+            let verified_ndk_root = input_ndk_root.unwrap().to_path_buf();
+            return Ok(verified_ndk_root);
+        } else {
+            println!("input ndk root is not verified, ndk root candidates are being searched.");
+        }
+
         MacConfig::search_ndk_root()
             .or_else(|| {
                 let user_input_path = MacConfig::ask_ndk_root();
