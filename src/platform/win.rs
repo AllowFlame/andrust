@@ -6,8 +6,8 @@ use std::{
 };
 
 use super::{
-    super::command::CommandOptions, ConfigWriter, Platform, PlatformError, PlatformResult,
-    PlatformToolset, TargetPlatform,
+    super::command::CommandOptions, super::downloader, ConfigWriter, Platform, PlatformError,
+    PlatformResult, PlatformToolset, TargetPlatform,
 };
 
 pub struct WinConfig {
@@ -151,7 +151,15 @@ impl Platform for WinConfig {
     }
 
     //TODO: implement download logic
-    fn download_ndk() {}
+    fn download_ndk() {
+        let downloader = downloader::Downloader::default();
+        let _ = downloader.download(
+            "https://dl.google.com/android/repository/android-ndk-r21b-windows-x86_64.zip"
+                .parse()
+                .unwrap(),
+            "ndk.zip",
+        );
+    }
 }
 
 impl Default for WinConfig {
