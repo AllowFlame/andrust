@@ -93,6 +93,9 @@ impl Platform for MacConfig {
         let writer = ConfigWriter::new(&toolsets);
         writer.write(None);
     }
+
+    //TODO: implement download logic
+    fn download_ndk() {}
 }
 
 impl Default for MacConfig {
