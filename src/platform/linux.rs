@@ -5,8 +5,8 @@ use std::{
 };
 
 use super::{
-    super::command::CommandOptions, ConfigWriter, Platform, PlatformError, PlatformResult,
-    PlatformToolset, TargetPlatform,
+    super::command::CommandOptions, super::downloader, ConfigWriter, Platform, PlatformError,
+    PlatformResult, PlatformToolset, TargetPlatform,
 };
 
 pub struct LinuxConfig {
@@ -106,6 +106,17 @@ impl Platform for LinuxConfig {
 
         let writer = ConfigWriter::new(&toolsets);
         writer.write(None);
+    }
+
+    //TODO: implement download logic
+    fn download_ndk() {
+        let downloader = downloader::Downloader::default();
+        let _ = downloader.download(
+            "https://dl.google.com/android/repository/android-ndk-r21b-linux-x86_64.zip"
+                .parse()
+                .unwrap(),
+            "ndk.zip",
+        );
     }
 }
 
