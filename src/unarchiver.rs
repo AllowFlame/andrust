@@ -26,20 +26,17 @@ async fn extract_zip_file(archive: Arc<ZipArchive<&fs::File>>, index: usize) -> 
     let archive = Arc::make_mut(&mut archive);
     let mut zip_file = archive.by_index(index).unwrap();
 
-    let outpath = zip_file.sanitized_name();
-    println!(
-        "extract_zip_file - outpath : {}",
-        &outpath.as_path().display()
-    );
+    let outpath = zip_file.enclosed_name().unwrap();
+    println!("extract_zip_file - outpath : {}", &outpath.display());
 
     if zip_file.is_dir() || zip_file.name().ends_with('/') {
-        println!("File extracted to \"{}\"", outpath.as_path().display());
+        println!("File extracted to \"{}\"", outpath.display());
         tokio::fs::create_dir_all(&outpath).await.unwrap();
         Ok(0)
     } else {
         println!(
             "File extracted to \"{}\" ({} bytes)",
-            outpath.as_path().display(),
+            outpath.display(),
             zip_file.size()
         );
         if let Some(path) = outpath.parent() {
