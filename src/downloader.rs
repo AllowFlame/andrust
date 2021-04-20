@@ -2,8 +2,6 @@ use std::cell::{RefCell, RefMut};
 use std::fs;
 use std::io::{stdout, Stdout, Write};
 
-use serde::{Deserialize, Serialize};
-
 use crossterm::{cursor, QueueableCommand};
 use webcraft::{
     hyper::Body, hyper::Request, hyper::Uri, Craft, CraftError, CraftResult, SaveFileObserver,
