@@ -1,4 +1,5 @@
 mod command;
+mod config;
 mod downloader;
 mod platform;
 mod unarchiver;
