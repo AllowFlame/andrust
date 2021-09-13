@@ -23,3 +23,12 @@ andrust will check NDK home, if it is not set or NDK is not present in the syste
 
 (https://developer.android.com/ndk/downloads)
 
+
+
+To help
+
+```shell
+$ andrust -h
+```
+
+This command will show options to set up the project
