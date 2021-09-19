@@ -15,23 +15,132 @@
 
 ### Rust가 지원하는 플랫폼
 
+우선 rust가 지원하는 platform을 확인해보면 아래화면같이 나온다.
+
 ```shell
 $ rustc --print target-list | pr -tw100 --columns 3
-aarch64-apple-ios                i686-pc-windows-gnu              x86_64-apple-darwin
-aarch64-linux-android            i686-pc-windows-msvc             x86_64-apple-ios
-aarch64-unknown-linux-gnu        i686-unknown-dragonfly           x86_64-pc-windows-gnu
-arm-linux-androideabi            i686-unknown-freebsd             x86_64-pc-windows-msvc
-arm-unknown-linux-gnueabi        i686-unknown-linux-gnu           x86_64-rumprun-netbsd
-arm-unknown-linux-gnueabihf      i686-unknown-linux-musl          x86_64-sun-solaris
-armv7-apple-ios                  le32-unknown-nacl                x86_64-unknown-bitrig
-armv7-unknown-linux-gnueabihf    mips-unknown-linux-gnu           x86_64-unknown-dragonfly
-armv7s-apple-ios                 mips-unknown-linux-musl          x86_64-unknown-freebsd
-asmjs-unknown-emscripten         mipsel-unknown-linux-gnu         x86_64-unknown-linux-gnu
-i386-apple-ios                   mipsel-unknown-linux-musl        x86_64-unknown-linux-musl
-i586-unknown-linux-gnu           powerpc-unknown-linux-gnu        x86_64-unknown-netbsd
-i686-apple-darwin                powerpc64-unknown-linux-gnu      x86_64-unknown-openbsd
-i686-linux-android               powerpc64le-unknown-linux-gnu
+aarch64-apple-darwin             i586-pc-windows-msvc             riscv64gc-unknown-none-elf
+aarch64-apple-ios                i586-unknown-linux-gnu           riscv64imac-unknown-none-elf
+aarch64-apple-ios-macabi         i586-unknown-linux-musl          s390x-unknown-linux-gnu
+aarch64-apple-ios-sim            i686-apple-darwin                s390x-unknown-linux-musl
+aarch64-apple-tvos               i686-linux-android               sparc-unknown-linux-gnu
+aarch64-fuchsia                  i686-pc-windows-gnu              sparc64-unknown-linux-gnu
+aarch64-linux-android            i686-pc-windows-msvc             sparc64-unknown-netbsd
+aarch64-pc-windows-msvc          i686-unknown-freebsd             sparc64-unknown-openbsd
+aarch64-unknown-freebsd          i686-unknown-haiku               sparcv9-sun-solaris
+aarch64-unknown-hermit           i686-unknown-linux-gnu           thumbv4t-none-eabi
+aarch64-unknown-linux-gnu        i686-unknown-linux-musl          thumbv6m-none-eabi
+aarch64-unknown-linux-gnu_ilp32  i686-unknown-netbsd              thumbv7a-pc-windows-msvc
+aarch64-unknown-linux-musl       i686-unknown-openbsd             thumbv7a-uwp-windows-msvc
+aarch64-unknown-netbsd           i686-unknown-uefi                thumbv7em-none-eabi
+aarch64-unknown-none             i686-uwp-windows-gnu             thumbv7em-none-eabihf
+aarch64-unknown-none-softfloat   i686-uwp-windows-msvc            thumbv7m-none-eabi
+aarch64-unknown-openbsd          i686-wrs-vxworks                 thumbv7neon-linux-androideabi
+aarch64-unknown-redox            mips-unknown-linux-gnu           thumbv7neon-unknown-linux-gnueab
+aarch64-uwp-windows-msvc         mips-unknown-linux-musl          thumbv7neon-unknown-linux-muslea
+aarch64-wrs-vxworks              mips-unknown-linux-uclibc        thumbv8m.base-none-eabi
+aarch64_be-unknown-linux-gnu     mips64-unknown-linux-gnuabi64    thumbv8m.main-none-eabi
+aarch64_be-unknown-linux-gnu_ilp mips64-unknown-linux-muslabi64   thumbv8m.main-none-eabihf
+arm-linux-androideabi            mips64el-unknown-linux-gnuabi64  wasm32-unknown-emscripten
+arm-unknown-linux-gnueabi        mips64el-unknown-linux-muslabi64 wasm32-unknown-unknown
+arm-unknown-linux-gnueabihf      mipsel-sony-psp                  wasm32-wasi
+arm-unknown-linux-musleabi       mipsel-unknown-linux-gnu         wasm64-unknown-unknown
+arm-unknown-linux-musleabihf     mipsel-unknown-linux-musl        x86_64-apple-darwin
+armebv7r-none-eabi               mipsel-unknown-linux-uclibc      x86_64-apple-ios
+armebv7r-none-eabihf             mipsel-unknown-none              x86_64-apple-ios-macabi
+armv4t-unknown-linux-gnueabi     mipsisa32r6-unknown-linux-gnu    x86_64-apple-tvos
+armv5te-unknown-linux-gnueabi    mipsisa32r6el-unknown-linux-gnu  x86_64-fortanix-unknown-sgx
+armv5te-unknown-linux-musleabi   mipsisa64r6-unknown-linux-gnuabi x86_64-fuchsia
+armv5te-unknown-linux-uclibceabi mipsisa64r6el-unknown-linux-gnua x86_64-linux-android
+armv6-unknown-freebsd            msp430-none-elf                  x86_64-pc-solaris
+armv6-unknown-netbsd-eabihf      nvptx64-nvidia-cuda              x86_64-pc-windows-gnu
+armv7-apple-ios                  powerpc-unknown-linux-gnu        x86_64-pc-windows-msvc
+armv7-linux-androideabi          powerpc-unknown-linux-gnuspe     x86_64-sun-solaris
+armv7-unknown-freebsd            powerpc-unknown-linux-musl       x86_64-unknown-dragonfly
+armv7-unknown-linux-gnueabi      powerpc-unknown-netbsd           x86_64-unknown-freebsd
+armv7-unknown-linux-gnueabihf    powerpc-unknown-openbsd          x86_64-unknown-haiku
+armv7-unknown-linux-musleabi     powerpc-wrs-vxworks              x86_64-unknown-hermit
+armv7-unknown-linux-musleabihf   powerpc-wrs-vxworks-spe          x86_64-unknown-illumos
+armv7-unknown-netbsd-eabihf      powerpc64-unknown-freebsd        x86_64-unknown-l4re-uclibc
+armv7-wrs-vxworks-eabihf         powerpc64-unknown-linux-gnu      x86_64-unknown-linux-gnu
+armv7a-none-eabi                 powerpc64-unknown-linux-musl     x86_64-unknown-linux-gnux32
+armv7a-none-eabihf               powerpc64-wrs-vxworks            x86_64-unknown-linux-musl
+armv7r-none-eabi                 powerpc64le-unknown-linux-gnu    x86_64-unknown-netbsd
+armv7r-none-eabihf               powerpc64le-unknown-linux-musl   x86_64-unknown-none-hermitkernel
+armv7s-apple-ios                 riscv32gc-unknown-linux-gnu      x86_64-unknown-none-linuxkernel
+asmjs-unknown-emscripten         riscv32gc-unknown-linux-musl     x86_64-unknown-openbsd
+avr-unknown-gnu-atmega328        riscv32i-unknown-none-elf        x86_64-unknown-redox
+bpfeb-unknown-none               riscv32imac-unknown-none-elf     x86_64-unknown-uefi
+bpfel-unknown-none               riscv32imc-unknown-none-elf      x86_64-uwp-windows-gnu
+hexagon-unknown-linux-musl       riscv64gc-unknown-linux-gnu      x86_64-uwp-windows-msvc
+i386-apple-ios                   riscv64gc-unknown-linux-musl     x86_64-wrs-vxworks
 ```
+
+여기서 지원하는 플랫폼은 target triple 형태로 표시된다.
+
+target triple은 아래와 같이 구성된다.
+
+- Architecture : 바이너리가 어떤 instruction set 위에서 돌아가야하는지를 나타낸다.
+- Vendor : 보통 디바이스의 제조사를 이야기하며 linux는 embedded linux까지 포함하여 대부분 unknown으로 표시된다.
+- System : 대부분 많이 알고 있는 Operating System을 의미한다.
+- ABI : mac과 bsd에서는 복수의 ABI를 제공하지 않기때문에 대부분 생략되어 "triple"에는 속하지 않지만 linux나 windows등에서는 compiler에 따라  function name manglingling 규칙이 등이 달라 Binary Interface를 표시해준다.
+
+
+
+### 안드로이드 툴체인 설치
+
+위에서 보면 알 수 있듯이 rust에서 지원가능한 android system은 다음과 같다.
+
+aarch64-linux-android, arm-linux-androideabi, armv7-linux-androideabi, i686-linux-android, x86_64-linux-android
+
+위의 툴체인을 설치해보자
+
+```shell
+$ rustup target add aarch64-linux-android arm-linux-androideabi armv7-linux-androideabi i686-linux-android x86_64-linux-android
+```
+
+
+
+정상적으로 설치가 됐다면 installed targets for active toolchain에  표시가 될 것이다.
+
+```shell
+$ rustup show
+Default host: x86_64-unknown-linux-gnu
+rustup home:  /home/username/.rustup
+
+installed toolchains
+--------------------
+
+stable-x86_64-unknown-linux-gnu (default)
+
+installed targets for active toolchain
+--------------------------------------
+
+aarch64-linux-android
+arm-linux-androideabi
+armv7-linux-androideabi
+i686-linux-android
+i686-pc-windows-msvc
+x86_64-linux-android
+x86_64-pc-windows-msvc
+x86_64-unknown-linux-gnu
+
+active toolchain
+----------------
+
+stable-x86_64-unknown-linux-gnu (default)
+rustc 1.54.0 (a178d0322 2021-07-26)
+```
+
+
+
+### 안드로이드 NDK 설정 (TBW)
+
+rust code를 cross compile하는 경우 최종 결과물을 얻기 위해서는 안드로이드 NDK에서 제공하는 ar(archiver)와 linker를 사용해야한다.
+
+NDK의 버전이 r19이하라면 standalone tool을 따로 빌드해주는 script를 실행하여 사용해야했지만 최근 NDK는 더 이상 standalone 툴을 따로 만들어줄 필요가 없게 업데이트 됐다. 해당 내용은 [다음링크](https://developer.android.com/ndk/guides/standalone_toolchain)에서 확인할 수  있다.
+
+
 
 
 
@@ -46,5 +155,9 @@ https://security.googleblog.com/2021/04/rust-in-android-platform.html
 https://github.com/japaric/rust-cross
 
 https://mozilla.github.io/firefox-browser-architecture/experiments/2017-09-21-rust-on-android.html
+
+https://developer.android.com/ndk/downloads
+
+https://developer.android.com/ndk/guides/standalone_toolchain
 
 
