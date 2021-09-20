@@ -142,7 +142,58 @@ NDK의 버전이 r19이하라면 standalone tool을 따로 빌드해주는 scrip
 
 
 
+### 코드 작성
 
+rust는 기본적으로 c와의 연동(ffi)가 매우 훌륭하므로 문자열을  반환하는 셈플 코드를 작성해보자.
+
+아래 코드를 src/lib.rs에 작성한다. 기본적으로 CLI 프로그램을 만들때의 엔트리포인트는 main.rs이지만 우리가 만드는 것은 실행파일 포멧이 아닌 library형태이기 때문에 main.rs는 사용하지 않는다.
+
+```rust
+use std::ffi::{CStr, CString};
+use std::os::raw::c_char;
+
+#[no_mangle]
+pub extern "C" fn rust_greeting(to: *const c_char) -> *mut c_char {
+    let c_str = unsafe { CStr::from_ptr(to) };
+    let recipient = match c_str.to_str() {
+        Err(_) => "there",
+        Ok(string) => string,
+    };
+
+    CString::new("Hello ".to_owned() + recipient)
+        .unwrap()
+        .into_raw()
+}
+```
+
+위 코드는 레퍼런스로 참고한  사이트에서 예로 든 샘플코드이다.
+
+일반적인 rust코드와 다른 점은 `#[no_mangle]`이라는 매크로, `extern "C"`구문, 그리고 `ffi::{CStr, CString}`사용등이 있다.
+
+일반적으로 rust는 문자열을 다룰 때 str의 reference인 &str와 String을 사용하는데 CStr과 CString은 c와의 연동을 위한 자료형으로 생각하면 된다.
+
+no_mangle 매크로의 경우 컴파일러마다 함수 이름을 변경하는 방식이 모두 다르므로 표준 C에 맞게 함수명 변경을 하지 않도록 하는것이다. 이는 C++와 C를 연동할 때도 같은 처리를 하는 매크로를 지원하고 있다.
+
+
+
+위 코드와 함께 Cargo.toml에 어떤 형식의 라이브러리를 빌드할지에 대한 정보도 제공해준다.
+
+정적 라이브러리와  동적 라이브러리 둘다 빌드를 할 것이기 때문에 Cargo.toml은 아래와 같은 형태로 구성될 것이다.
+
+```toml
+[package]
+name = "rust_android"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[lib]
+name = "rust_android_lib"
+crate-type = ["staticlib", "cdylib"]
+```
 
 
 
@@ -159,5 +210,4 @@ https://mozilla.github.io/firefox-browser-architecture/experiments/2017-09-21-ru
 https://developer.android.com/ndk/downloads
 
 https://developer.android.com/ndk/guides/standalone_toolchain
-
 
