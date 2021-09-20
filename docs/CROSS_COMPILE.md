@@ -91,7 +91,7 @@ target triple은 아래와 같이 구성된다.
 
 위에서 보면 알 수 있듯이 rust에서 지원가능한 android system은 다음과 같다.
 
-aarch64-linux-android, arm-linux-androideabi, armv7-linux-androideabi, i686-linux-android, x86_64-linux-android
+`aarch64-linux-android`, `arm-linux-androideabi`, `armv7-linux-androideabi`, `i686-linux-android`, `x86_64-linux-android`
 
 위의 툴체인을 설치해보자
 
@@ -134,7 +134,7 @@ rustc 1.54.0 (a178d0322 2021-07-26)
 
 
 
-### 안드로이드 NDK 설정 (TBW)
+### 안드로이드 NDK 설정
 
 rust code를 cross compile하는 경우 최종 결과물을 얻기 위해서는 안드로이드 NDK에서 제공하는 ar(archiver)와 linker를 사용해야한다.
 
@@ -197,6 +197,57 @@ crate-type = ["staticlib", "cdylib"]
 
 
 
+### build
+
+이제 작성한 코드를 빌드를 해서 안드로이드용 정적 라이브러리 또는 동적 라이브러리를 얻을 것이다.
+
+러스트 코드를 빌드를 플랫폼별로 빌드를 할 때 NDK의 ar(archiver)와 linker를 사용한다고 했는데 이 설정은 $project_root/.cargo/config 파일로 설정해준다.
+
+```toml
+[target.aarch64-linux-android]
+ar = "$NDK_TOOL_ROOT/arm64/bin/aarch64-linux-android-ar"
+linker = "$NDK_TOOL_ROOT/arm64/bin/aarch64-linux-android-clang"
+
+[target.armv7-linux-androideabi]
+ar = "$NDK_TOOL_ROOT/arm/bin/arm-linux-androideabi-ar"
+linker = "$NDK_TOOL_ROOT/arm/bin/arm-linux-androideabi-clang"
+
+[target.i686-linux-android]
+ar = "$NDK_TOOL_ROOT/x86/bin/i686-linux-android-ar"
+linker = "$NDK_TOOL_ROOT/x86/bin/i686-linux-android-clang"
+
+[target.x86_64-linux-android]
+ar = "$NDK_TOOL_ROOT/xx86_6486/bin/x86_64-linux-android-ar"
+linker = "$NDK_TOOL_ROOT/x86_64/bin/x86_64-linux-android-clang"
+```
+
+애석하게도 config파일은 환경변수를 인식하지 못한다.
+
+셈플처럼 설정을 해주고 `$NDK_TOOL_ROOT`를 system 환경변수로 등록해줘도 저 코드는 동작하지 않을것이다. 그러므로  시스템마다 full_path를 입력해줘야한다.
+
+만약 해당 코드를 여러 플랫폼에서 사용해야한다면 [build.rs](https://doc.rust-lang.org/cargo/reference/build-scripts.html)를 활용해 config파일을 build시에 생성해주는것도 고려할만 할 것이다.
+
+
+
+config를 마무리 했다면 다음 command로 라이브러리들을 각 플랫폼에 맞게 빌드한다.
+
+```shell
+$ cargo build --target aarch64-linux-android --release
+$ cargo build --target armv7-linux-androideabi --release
+$ cargo build --target i686-linux-android --release
+$ cargo build --target x86_64-linux-android --release
+```
+
+빌드가 성공했다면 /target 디렉토리에 각 플랫폼별 디렉토리가 생성돼있고 `librust_android_lib.a`와 `librust_android_lib.so`파일을 찾을 수 있을 것이다.
+
+
+
+### 연결하기
+
+
+
+
+
 
 
 Reference
@@ -211,3 +262,4 @@ https://developer.android.com/ndk/downloads
 
 https://developer.android.com/ndk/guides/standalone_toolchain
 
+https://doc.rust-lang.org/cargo/reference/build-scripts.html
