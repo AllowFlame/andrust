@@ -146,7 +146,7 @@ NDK의 버전이 r19이하라면 standalone tool을 따로 빌드해주는 scrip
 
 rust는 기본적으로 c와의 연동(ffi)가 매우 훌륭하므로 문자열을  반환하는 셈플 코드를 작성해보자.
 
-아래 코드를 src/lib.rs에 작성한다. 기본적으로 CLI 프로그램을 만들때의 엔트리포인트는 main.rs이지만 우리가 만드는 것은 실행파일 포멧이 아닌 library형태이기 때문에 main.rs는 사용하지 않는다.
+아래 코드를 `src/lib.rs`에 작성한다. 기본적으로 CLI 프로그램을 만들때의 엔트리포인트는 `main.rs`이지만 우리가 만드는 것은 실행파일 포멧이 아닌 library형태이기 때문에 `main.rs`는 사용하지 않는다.
 
 ```rust
 use std::ffi::{CStr, CString};
@@ -197,7 +197,7 @@ crate-type = ["staticlib", "cdylib"]
 
 
 
-### build
+### build 해보기
 
 이제 작성한 코드를 빌드를 해서 안드로이드용 정적 라이브러리 또는 동적 라이브러리를 얻을 것이다.
 
@@ -242,7 +242,68 @@ $ cargo build --target x86_64-linux-android --release
 
 
 
-### 연결하기
+### JNI로 연결하기
+
+안드로이드에서는 `a`나 `so`파일을 사용하려면 NDK를 이용하여 bridge를 만들어줘야한다. iOS와의 공용으로 사용하려면 C/C++ bridge와 JNI까지 모두 손수 작성할 수도 있겠지만 이 글에서는 안드로이드만 다룰것이기 때문에 [jni-rs](https://github.com/jni-rs/jni-rs) crate을 사용하기로 한다.
+
+
+
+`jni-rs`를 사용하기 위해 `Cargo.toml`에 아래 의존성(dependencies)을 추가해준다.
+
+```toml
+[target.'cfg(target_os="android")'.dependencies]
+jni = { version = "0.5", default-features = false }
+```
+
+jni는 안드로이드의 연결에서만 사용할 것이므로(해당 라이브러리를 안드로이드 이외에 JVM이 돌아가는 시스템에 연결하고  싶다면 `target_os`부분을 추가하거나 제거한다) `target_os`부분을 추가했다.
+
+추가로 `crate-type`부분을 아래처럼 수정해준다.
+
+```toml
+crate-type = ["dylib"]
+```
+
+위에서 `staticlib`과 `cdylib`은 c bridge를 위한 library를 만들 때 사용하지만 이번에는 jni로 c bridge까지를 한꺼번에 묶은 형태의 라이브러리를 만들것이다.
+
+`Cargo.toml`의 설정이 완료됐다면 `src/lib.rs`에 아래 코드를 추가한다.
+
+```rust
+#[cfg(target_os="android")]
+#[allow(non_snake_case)]
+pub mod android {
+    extern crate jni;
+
+    use super::*;
+    use self::jni::JNIEnv;
+    use self::jni::objects::{JClass, JString};
+    use self::jni::sys::{jstring};
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_getmiso_greetings_RustGreetings_greeting(env: JNIEnv, _: JClass, java_pattern: JString) -> jstring {
+        // Our Java companion code might pass-in "world" as a string, hence the name.
+        let world = rust_greeting(env.get_string(java_pattern).expect("invalid pattern string").as_ptr());
+        // Retake pointer so that we can use it below and allow memory to be freed when it goes out of scope.
+        let world_ptr = CString::from_raw(world);
+        let output = env.new_string(world_ptr.to_str().unwrap()).expect("Couldn't create java string!");
+
+        output.into_inner()
+    }
+}
+```
+
+첫번째 매크로는 `target_os`를 설정해주는것으로 다른 target들에서는 해당 코드는 빌드에 포함하지 않는다는 의미이다.
+
+두번째 줄에 사용된 `non_snake_case`허용에 대한 매크로가 없다면 코드를 컴파일 할 때 `Java_com_getmiso_greetings_RustGreetings_greeting`함수의 이름 때문에 warning이 나올것이다. 이는 rust의 naming convention과 맞지 않은 이름이기 때문이며 문제는 저 이름이 JNI를 사용하기 위해서는 package명과 class, method name을 맞춰줘야하는 강제적 사항이기 때문에 매크로로 해당 이름을 허용하는 것이다. Rust의 name convention에 대한 정리는 [이곳](https://doc.rust-lang.org/1.0.0/style/style/naming/README.html)에서 볼 수 있다.
+
+
+
+이제 아까와같이 각 플랫폼별로 다시 컴파일을 하면 `so`파일을 얻을 수 있을것이다.
+
+여기까지 했으면 rust로 만드는 라이브러리는 작업이 끝났다.
+
+다음은 이 라이브러리를 안드로이드앱에서 사용하는 방법에 대해 알아보자.
+
+
 
 
 
@@ -263,3 +324,9 @@ https://developer.android.com/ndk/downloads
 https://developer.android.com/ndk/guides/standalone_toolchain
 
 https://doc.rust-lang.org/cargo/reference/build-scripts.html
+
+https://github.com/jni-rs/jni-rs
+
+https://doc.rust-lang.org/1.0.0/style/style/naming/README.html
+
+https://developer.android.com/training/articles/perf-jni
