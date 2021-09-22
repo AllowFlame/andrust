@@ -1,4 +1,4 @@
-# write once run anywhere - 러스트?!
+# 러스트로 안드로이드 라이브러리 만들기
 
 안드로이드 팀에서 기존 C/C++로 개발되던 안드로이드 OS 개발에 [Rust도 사용하기로 했다는 글](https://security.googleblog.com/2021/04/rust-in-android-platform.html)을 본지도 벌써 6개월이 다 되어감에 따라 안드로이드 앱 개발을 할 때 일부 라이브러리들을 Rust로 구현했던 경험을 정리해본다.
 
@@ -242,7 +242,7 @@ $ cargo build --target x86_64-linux-android --release
 
 
 
-### JNI로 연결하기
+### JNI로 구성하기
 
 안드로이드에서는 `a`나 `so`파일을 사용하려면 NDK를 이용하여 bridge를 만들어줘야한다. iOS와의 공용으로 사용하려면 C/C++ bridge와 JNI까지 모두 손수 작성할 수도 있겠지만 이 글에서는 안드로이드만 다룰것이기 때문에 [jni-rs](https://github.com/jni-rs/jni-rs) crate을 사용하기로 한다.
 
@@ -252,7 +252,7 @@ $ cargo build --target x86_64-linux-android --release
 
 ```toml
 [target.'cfg(target_os="android")'.dependencies]
-jni = { version = "0.5", default-features = false }
+jni = { version = "0.19.0", default-features = false }
 ```
 
 jni는 안드로이드의 연결에서만 사용할 것이므로(해당 라이브러리를 안드로이드 이외에 JVM이 돌아가는 시스템에 연결하고  싶다면 `target_os`부분을 추가하거나 제거한다) `target_os`부분을 추가했다.
@@ -305,9 +305,71 @@ pub mod android {
 
 
 
+### 안드로이드 앱에서 라이브러리 사용하기
+
+안드로이드 앱을 만들기 위해서 [안드로이드 스튜디오](https://developer.android.com/studio/install?hl=ko)를 실행해서 새로운 프로젝트를 생성한다. 여기서는 Greentings라는 앱을 만들것이다.
+
+Empty Activity 탬플릿으로 새로운 안드로이드 앱을 생성하려면 package name을 지정해줘야하는데 위에서 JNI 함수에서 지정한 package명 (`com.getmiso.greetings`)로 지정한다. 만약 이 package명이 다르다면 경로에 함수를 찾지 못하고 앱을 runtime error가 발생하며 앱이 종료될 것이다.
+
+안드로이드 프로젝트를 생성해다면 `com.getmiso.greetings.MainActivity`가 엔트리 포인트로 지정된것을 `AndroidManifest.xml`에서 확인할 수 있을것이다. 이제 JNI와 연결된 java code를 써보자.
+
+```java
+package com.getmiso.greetings;
+
+public class RustGreetings {
+    private static native String greeting(final String pattern);
+
+    public String sayHello(String to) {
+        return greeting(to);
+    }
+}
+```
+
+위 코드를 `app/src/main/java/com/getmiso/greetings/RustGreetings.java`에 생성해준다. 여기서 `greeting` method가 JNI로 연결되서 실제 native call을 하는 method이다.
+
+이제 위의 method를 실제로 호출해보자.
+
+우선 method를 실제로 호출하기 전에 한가지 해야할 것이있다.
+
+그것은 동적 라이브러리들을 안드로이드 프로젝트에 포함시키는 작업이다.
+
+빌드가 완료된 `so`파일들을 `/app/src/main/jniLibs`에 각 플랫폼마다 폴더를 만들고 복사해준다.
+각 플랫폼은 [Android ABI](https://developer.android.com/ndk/guides/abis)를 참고한다. 이에 대한 설명은 [여기](https://developer.android.com/studio/projects/gradle-external-native-builds#jniLibs)를 참고한다.
 
 
 
+라이브러리까지 잘 포함했다면 이제 라이브러리를 앱을 실행하면 바로 볼 수 있도록 `MainActivity`에서 호출해볼 것이다. `app/src/main/java/com/getmiso/greetings/MainActivity.java`를 아래처럼 구성한다.
+
+```java
+package com.getmiso.greetings;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Bundle;
+import android.widget.TextView;
+
+public class MainActivity extends AppCompatActivity {
+    static {
+        System.loadLibrary("rust_android_lib");
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        RustGreetings g = new RustGreetings();
+        String r = g.sayHello("world");
+        ((TextView)findViewById(R.id.greetingField)).setText(r);
+    }
+}
+```
+
+우선 라이브러리를 사용하려면 `System.loadLibrary`를 이용해서 로드해야한다. 여기서 파일 이름의 접두사(prefix) lib를 제거한 파일 이름을 적어준다. 이 이름이 틀리면 네이티브 라이브러리를 로드할 수 없다는 에러가 발생하기 때문에 정확하게 입력해야한다.
+
+그리고  실제 native method인 `greeting`을 사용한 `sayHello` method를 사용해 문자열을 조작하여 `r`에  할당했다.
+
+위 코드는 activity_main.xml에 TextView에 해당 문자열을 출력하도록 코드가 구성돼있지만 `r`을 Logcat으로 출력해보면 "Hello world"라는 문자열이 표시되는것을 볼 수 있을 것이다.
 
 
 
@@ -330,3 +392,9 @@ https://github.com/jni-rs/jni-rs
 https://doc.rust-lang.org/1.0.0/style/style/naming/README.html
 
 https://developer.android.com/training/articles/perf-jni
+
+https://developer.android.com/studio/install?hl=ko
+
+https://developer.android.com/ndk/guides/abis
+
+https://developer.android.com/studio/projects/gradle-external-native-builds#jniLibs
