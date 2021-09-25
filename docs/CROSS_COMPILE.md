@@ -1,6 +1,35 @@
 # 러스트로 안드로이드 라이브러리 만들기
 
-안드로이드 팀에서 기존 C/C++로 개발되던 안드로이드 OS 개발에 [Rust도 사용하기로 했다는 글](https://security.googleblog.com/2021/04/rust-in-android-platform.html)을 본지도 벌써 6개월이 다 되어감에 따라 안드로이드 앱 개발을 할 때 일부 라이브러리들을 Rust로 구현했던 경험을 정리해본다.
+안드로이드 팀에서 기존 C/C++로 개발되던 안드로이드 OS 개발에 [Rust도 사용하기로 했다는 글](https://security.googleblog.com/2021/04/rust-in-android-platform.html)을 보며 안드로이드 앱 개발을 할 때 일부 라이브러리들을 Rust로 구현했던 경험을 정리합니다.
+
+여기에서 예제로 사용된 셈플 코드는 깃헙에 있는 모질라 블로그에서 발췌한것이며 실제로 프로젝트에서 사용했던 코드와는 상이함을 명시합니다.
+
+
+
+### 왜 러스트인가?
+
+일단 안드로이드 앱개발자면 한번쯤은 본 시스템 아키텍처 다이어그램을 보겠습니다.
+
+![](https://developer.android.com/guide/platform/images/android-stack_2x.png)
+
+[*뭔가 기존에 본 다이어그램보다 산듯해진 느낌이 든다면 당신은 안드로이드 앱 개발을 오래전부터 시작하신 분일겁니다.*]
+
+
+
+위의 다이어그램에서 보듯이 안드로이드의 최하층부는 리눅스커널이 위치해있으며 그 위에 하드웨어를 제어하는 드라이버들을 추상화한 계층인 HAL과 Linux의 `system call`을 할 수 있는 `Native C/C++ Libraries` 그리고 JAVA byte code를 동작시키는 VM인 `Android Runtime (ART) 예전에는 Dalvik VM`이 구성돼있는 것을 볼 수 있습니다.
+
+안드로이드 앱을 개발한다는것은 대부분 최상층부에 있는 `Java API Framework`를 이용해서 앱을 만든는 것을 의미합니다.
+
+그리고 일반적인 앱은 저것으로 충분히 만들 수 있습니다. 하지만 기기의 성능을 극한까지 뽑아야하는 작업(예를 들면 게임이라든지)인 경우 `ART`위에서 동작하는 앱 만으로는 구현이 어려울 수 있습니다.
+
+안드로이드 팀도 이 점 때문에 Android SDK뿐 아니라 [NDK](https://developer.android.com/ndk)도 배포하고 있으며 여기서는 NDK가 다음과 같은 상황에서 유용할 수 있다고 기술돼있습니다.
+
+- 기기의 성능을 최대한 활용하여 짧은 지연 시간을 구현해야 하거나 게임 또는 물리학 시뮬레이션과 같은 컴퓨팅 집약적 애플리케이션을 실행해야 하는 상황
+- 본인 또는 다른 개발자의 C 또는 C++ 라이브러리를 재사용하는 경우
+
+
+
+그렇다면 C/C++로 NDK를 이용하면 되는 것이지 왜 Rust? 이런 생각이 들 것입니다. 그 이유는 <strike>글쓴이의 취향</strike> C/C++에서 흔이하는 메모리 관련 실수들을 미리 방지해주면서 거의 동일한 수준의 성능을 보이고 게다가 FFI가 쉬운 언어가 바로 Rust이기 때문입니다. [여기](https://www.rust-lang.org/)에서 Rust의 장점<strike>과 지금 이 글을 읽고 있는 독자가 왜 지금 당장 Rust를 사용해야하는지에 대한 모든 내용</strike>이 소개돼있습니다.
 
 
 
@@ -398,3 +427,9 @@ https://developer.android.com/studio/install?hl=ko
 https://developer.android.com/ndk/guides/abis
 
 https://developer.android.com/studio/projects/gradle-external-native-builds#jniLibs
+
+https://developer.android.com/guide/platform
+
+https://developer.android.com/ndk
+
+https://developer.android.com/ndk/guides
